@@ -48,4 +48,5 @@ dev.off()
 # optional. Pdfcrop is called to trim white margin spaces
 system("pdfcrop  sup_fig/gene_assigment_2_hims_agreements_2cells.pdf")
 system('mv sup_fig/gene_assigment_2_hims_agreements_2cells-crop.pdf sup_fig/gene_assigment_2_hims_agreements_2cells.pdf')
-
+# Pairwise comparison shows that GM12878 and K562 (both are blood cell lines) 
+# share the highest number of genes that are assigned to HIMs, which reconfirms biological relavance of HIMs.
