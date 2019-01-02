@@ -23,9 +23,10 @@ nogene_in_hims_2cell = function(cell1, cell2, df, type=1){
     pval = phyper(q=N3-1, m=N1, n=N-N1, k=N2, lower.tail = F)
     return(pval)
 }
-cellcomb = combn(length(cells), 2)
-cellcombname = paste(cells[cellcomb[1, ]], cells[cellcomb[2, ]], sep='_vs_')
-n1 = apply(df, 2, function(z) sum(z == 1))
+
+#cellcomb = combn(length(cells), 2)
+#cellcombname = paste(cells[cellcomb[1, ]], cells[cellcomb[2, ]], sep='_vs_')
+#n1 = apply(df, 2, function(z) sum(z == 1))
 
 res = matrix(0, nrow=length(cells), ncol=length(cells))
 for( i in 1:(length(cells) -1 )){
@@ -45,8 +46,5 @@ pdf('sup_fig/gene_assigment_2_hims_agreements_2cells.pdf', width=3, height=3)
 corrplot(res, is.corr = F, order='hclust', diag=F, cl.lim=c(0, max(res)), type='upper', mar=rep(0, 4), tl.cex=0.8,
          cl.length=5, cl.ratio=0.4, cl.align.text = 'c', cl.cex=0.6, title=NULL)
 dev.off()
-# optional. Pdfcrop is called to trim white margin spaces
-system("pdfcrop  sup_fig/gene_assigment_2_hims_agreements_2cells.pdf")
-system('mv sup_fig/gene_assigment_2_hims_agreements_2cells-crop.pdf sup_fig/gene_assigment_2_hims_agreements_2cells.pdf')
 # Pairwise comparison shows that GM12878 and K562 (both are blood cell lines) 
 # share the highest number of genes that are assigned to HIMs, which reconfirms biological relavance of HIMs.
