@@ -1,5 +1,16 @@
 rm(list=ls())
 library(venn)
+## compare the genes that are in the five cell types 
+prop_consti_genes = function(X, cell){
+    # number of genes in the five cell types 
+    ind = rowSums(X == 1) == ncol(X)
+    n = sum(ind)
+    # number of genes in the cell type
+    ind = sum(X[, cell] == 1)
+    n1 = sum(ind)
+    prop = round(n/n1*100, 2)
+    return(c(n, n1, prop))
+}
 comp_cell_venn <- function(gene_table, pdf_file) {
 #gene_table <- read.table(file=filename, header = TRUE, sep = '\t')
     cat(colnames(gene_table))
@@ -22,6 +33,29 @@ comp_cell_venn <- function(gene_table, pdf_file) {
 # compare cell types
 data = read.table('data/venn.txt', header=T, sep='\t')
 data2 = data; data2[data2 == 2]  = 1
+cells = colnames(data)[2:ncol(data)]
+# proportion of genes that are observed in the 5 cell types
+phimgene = sapply(cells, function(z) prop_consti_genes(X=data[, 2:6], cell=z))
+pgrngene = sapply(cells, function(z) prop_consti_genes(X=data2[, 2:6], cell=z))
+range(phimgene[3, ])
+range(pgrngene[3, ])
+# UpSetR
+library(UpSetR)
+# test
+movies <- read.csv(system.file("extdata", "movies.csv", package = "UpSetR"), 
+                   header = T, sep = ";")
+# test ends here
+head(movies)
+upset_plot = function(X){
+    tmp = X == 1
+    tmp = apply(tmp, 2, as.integer)
+    tmp = data.frame(tmp)
+    # create meta data to annotate the distribution
+    upset(tmp, sets=cells, mb.ratio=c(0.55, 0.45), group.by = 'degree', keep.order=T)
+}
+upset_plot(X=data[, 2:6])
+upset_plot(X=data2[, 2:6])
+# 
 venn_table <- comp_cell_venn(data2, "sup_fig/5_cell_venn_grn.pdf")
 venn_table <- comp_cell_venn(data, "sup_fig/5_cell_venn_him.pdf")
 #
