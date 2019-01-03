@@ -1,5 +1,14 @@
 rm(list=ls())
 library(venn)
+# NO. of genes that are assigned to HIMs in N cell types
+gene2him_dist = function(X){
+    X = data[, 2:6]
+    cells = colnames(X)
+    z = cells[1]
+    res = sapply(cells, function(z){
+       as.data.frame(table(rowSums(X[X[, z] == 1, ] == 1) ))
+    })
+}
 ## compare the genes that are in the five cell types 
 prop_consti_genes = function(X, cell){
     # number of genes in the five cell types 
