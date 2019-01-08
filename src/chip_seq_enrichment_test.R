@@ -1,12 +1,15 @@
 library(splitstackshape)
 library(ggplot2)
 library(reshape2)
+library(doParallel)
 
 # fix the peaks and gene set; randomly pick new gene set while preserving the mean distance and sd 
 # step 1. load the peak count near the tss table 
-load_peak_table = function(cell, w){
+load_peak_table = function(cell, w, filter=T, chip_coverage=0.1){
     path = paste('data/chip-peaks/gene_TF_peak_combined_',cell,'_w_', w, '.txt', sep='')
     peak = read.table(path, header = T, row.names = 1, sep='\t')
+    peak_coverage = apply(peak, 2, function(z) sum(z>0) / length(z))
+    peak = peak[, peak_coverage>= chip_coverage]
     return(peak)
 }
 # step 2. load the genomic locations of genes in the GRN of a cell type
@@ -64,10 +67,14 @@ random_geneset_oneset = function(ngene, mat, mean.const, sigma.const, max.const)
     genes = colnames(mat)
     # step 1. randomly pick two  suitable farthest apart genes 
     ind.max.iter = T
-    while(ind.max.iter){
-    farest_dist = 0; ngene_cand = 0
-    while( (abs(farest_dist - max.const) >= 0.1*max.const) | (ngene_cand < ngene)){
-        g1.index = sample(1:n1, 1)
+    max.try = 0
+    while(ind.max.iter & max.try < 100){
+    max.try = max.try + 1
+    farest_dist = 0; ngene_cand = 0;
+    g1.cand.index = 1:n1
+    while(( (abs(farest_dist - max.const) >= 0.2*max.const) | (ngene_cand < ngene)) & length(g1.cand.index) > 0){
+        g1.index = sample(g1.cand.index, 1)
+        g1.cand.index = g1.cand.index[g1.cand.index != g1.index]
         g1 = genes[g1.index]
         g1.dist = mat[g1.index, ]
         g2.index = which.min(abs(g1.dist - max.const))
@@ -75,35 +82,48 @@ random_geneset_oneset = function(ngene, mat, mean.const, sigma.const, max.const)
         farest_dist = mat[g1.index, g2.index]
         ngene_cand = abs(g1.index - g2.index)
     }
-    if(g1.index > g2.index){
-        tmp = g1.index
-        g1.index = g2.index
-        g2.index = tmp
-    }
-    # step 2; pick the rest ngene -2 genes
-    # try brutial force 
-    k = 1; k.max = choose(ngene_cand, ngene)
-    mean_initial = 0; sigma_initial=0
-    g.index = c()
-    while( (k<k.max) & (abs(mean.const - mean_initial)/mean.const >=0.2 | abs(sigma.const - sigma_initial)/sigma.const>=0.2)){
-        k = k + 1
-        gr.index = sample(g1.index:g2.index, ngene-2, replace = F)
-        g.index = c(g1.index, g2.index, gr.index)
-        mat_tmp = mat[g.index, g.index]
-        mean_initial = mean(mat_tmp)
-        sigma_initial = sd(mat_tmp)
-    }
+    if(length(g1.cand.index) > 0){
+        if(g1.index > g2.index){
+            tmp = g1.index
+            g1.index = g2.index
+            g2.index = tmp
+        }
+        # step 2; pick the rest ngene -2 genes
+        # try brutial force 
+        k = 1; 
+        k.max = min(100, choose(ngene_cand, ngene))
+        mean_initial = 0; sigma_initial=0
+        g.index = c()
+        while( (k<k.max) & (abs(mean.const - mean_initial)/mean.const >=0.2 | abs(sigma.const - sigma_initial)/sigma.const>=0.2)){
+            k = k + 1
+            gr.index = sample(g1.index:g2.index, ngene-2, replace = F)
+            g.index = c(g1.index, g2.index, gr.index)
+            mat_tmp = mat[g.index, g.index]
+            mean_initial = mean(mat_tmp)
+            sigma_initial = sd(mat_tmp)
+        }
+        
         if(k==k.max){
             ind.max.iter = T
         } else {
             ind.max.iter = F
         }
+    
+    } else {
+        genesets=NULL
     }
-    geneset = genes[g.index]
+    
+    }
+    if(max.try < 100){
+        geneset = genes[g.index]
+    } else {
+        geneset = NULL
+    }
+    
     return(geneset)
 }
 
-random_geneset = function(genes, chr, dist.mat, N){
+random_geneset = function(genes, dist.mat, N, parallel=T){
     n = length(genes)
     ind = rownames(dist.mat) %in% genes 
     dist.mat.real = dist.mat[ind, ind]
@@ -114,16 +134,55 @@ random_geneset = function(genes, chr, dist.mat, N){
     dist.sd = sd(dist.mat.real)
     dist.max = max(dist.mat.real)
     ### potentially parallel implementation
-    tmp = random_geneset_oneset(ngene=n, mat=dist.mat.cad, mean.const = dist.mean, sigma.const = dist.sd, max.const=dist.max)
-    # check this post
-    #https://stats.stackexchange.com/questions/30303/how-to-simulate-data-that-satisfy-specific-constraints-such-as-having-specific-m
-    
+    ## parallel version 
+    if(parallel){
+        result = foreach(i=1:N, .combine=rbind) %dopar% random_geneset_oneset(ngene=n, mat=dist.mat.cad, mean.const = dist.mean, sigma.const = dist.sd, max.const=dist.max)
+    } else {
+        #result = matrix('', nrow=N, ncol=n)
+        result = c()
+        k.empty = 0
+        for(i in 1:N){
+            #if(i %% 100 == 0){
+            #    print(paste(i, ' samples are geenrated'))
+            #}
+            tmp = random_geneset_oneset(ngene=n, mat=dist.mat.cad, mean.const = dist.mean, sigma.const = dist.sd, max.const=dist.max)
+            if(! is.null(tmp)){
+                #result[i, ] = sort(tmp)
+                result = rbind(result, sort(tmp))
+            } else {
+                k.empty = k.empty + 1
+            }
+            
+            if(k.empty >=50){
+               break 
+            }
+        }
+        result = NULL
+    }
+    return(result)
 }
-permu_res = random_geneset(genes=gs_tf[[1]][[1]], chr=gs_chr[[1]][[1]], 
-                           dist.mat=gene_dist[[ gs_chr[[1]][[1]] ]], N=N)
 
-# step1. find the him gnes 
+random_geneset_pval = function(i, j, gs_tf, gs_chr, peak_gene, gene_dist, N, parallel=T){
+    print(c(i, j))
+    permu_res = random_geneset(genes=gs_tf[[i]][[j]],  dist.mat=gene_dist[[ gs_chr[[i]][[j]] ]], N=N, parallel=parallel)
+    if(!is.null(permu_res) & length(permu_res)>0 ){
+        if( nrow(permu_res) > 0.9 * N){
+            npeak = sum(peak_gene[ gs_tf[[i]][[j]], tfs[i] ])
+            npeak_random = apply(permu_res, 1, function(z) sum(peak_gene[z, tfs[i]]) )
+            pval = sum(npeak_random >= npeak) / N
+            pval2 = pnorm(npeak, mean(npeak_random), sd(npeak_random), lower.tail = F)
+            tmp1 = c(length(gs_tf[[i]][[j]]), npeak, pval, pval2)
+            tmp1 = as.character(tmp1)
+            tmp = c(tfs[i], names(gs_tf[[i]])[j], tmp1)
+        }
+    } else {
+        tmp= NULL
+    }
+    return(tmp)
+}
+
 ######## method overhaul again 
+# step1. find the him gnes 
 gs_from_hims = function(i, cell){
     # load genes in the GRN of the cell type
     genes = read.table(paste('data/gene_symbol_list_', cell,'.txt', sep=''), stringsAsFactors = F)

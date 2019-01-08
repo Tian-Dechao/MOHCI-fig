@@ -1,22 +1,47 @@
+## doulbe check the gene set sampling  
 rm(list=ls())
 source('src/chip_seq_enrichment_test.R')
 cells = c('gm12878', 'k562')
 ws = c('5000', '10000', '50000', '100000')
-type = c('individual', 'population')
-chip_coverage_cutoffs=c(0.05, 0.1, 0.2)
 N=1000 # the number of random gene set per him
-cell='gm12878'; w='10000'
-peak_gene = load_peak_table(cell=cell, w=w)
-tfs = colnames(peak_gene)
-genes_bed = load_gene_grn_bed(cell=cell)
-gene_dist = compute_pairwise_distance(genes_bed)
-gs_tf_chr = extract_him_genes_per_TF(i='data/him_summary_allinone.txt', cell=cell, tfs=tfs)
-gs_tf = gs_tf_chr[['genes']]; gs_chr = gs_tf_chr[['chr']]
-source('src/chip_seq_enrichment_test.R')
-# test one one him
-str(gs_tf)
-permu_res = random_geneset(genes=gs_tf[[1]][[1]], chr=gs_chr[[1]][[1]], 
-                           dist.mat=gene_dist[[ gs_chr[[1]][[1]] ]], N=N)
+for(cell in cells){
+    for(w in ws){
+        peak_gene = load_peak_table(cell=cell, w=w, filter=F, chip_coverage=0.05)
+        # convert to binary
+        peak_gene = peak_gene >= 1
+        tfs = colnames(peak_gene)
+        # only consider master TFs with chip-seq data
+        #tfs.master = read.table(paste('data/master_tfs_subset_grn_',cell,'.txt', sep='') , stringsAsFactors = F)[,1]
+        #tfs = tfs[tfs%in% tfs.master]
+        genes_bed = load_gene_grn_bed(cell=cell)
+        gene_dist = compute_pairwise_distance(genes_bed)
+        gs_tf_chr = extract_him_genes_per_TF(i='data/him_summary_allinone.txt', cell=cell, tfs=tfs)
+        gs_tf = gs_tf_chr[['genes']]; gs_chr = gs_tf_chr[['chr']]
+        ncomb = c()
+        for(i in 1:length(tfs)){
+            nh = length(gs_tf[[i]])
+            tmp = cbind(i, 1:nh)
+            ncomb = rbind(ncomb, tmp)
+        }
+        res = c()
+        #gs_tf[[1]][[46]]; gs_chr[[1]][[46]]
+        for(k in 1:nrow(ncomb)){
+            tmp = random_geneset_pval(i=ncomb[k, 1], j=ncomb[k, 2], gs_tf=gs_tf, gs_chr=gs_chr, 
+                                    peak_gene=peak_gene, gene_dist=gene_dist, N=N, parallel=T)  
+            if(!is.null(tmp)){
+              res = rbind(res, tmp)
+            }
+        }
+        res = data.frame(res, stringsAsFactors = F)
+        for(i in 3:6){
+            res[, i] = as.numeric(res[, i])
+        }
+        res[, 'prop'] = res[, 4] / res[, 3] * 100
+        ofile = paste('inter_results/chip_enrichment_', cell, '_w_', w, '.txt',sep='')
+        write.table(res, ofile, col.names = F, row.names = F, quote=F, sep='\t')
+    }
+}
+# summarize results
 #### method overhaul
 result = c()
 for(cell in cells){
