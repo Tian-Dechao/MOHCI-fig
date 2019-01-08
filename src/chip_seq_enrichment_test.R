@@ -59,19 +59,68 @@ extract_him_genes_per_TF = function(i, cell, tfs){
 }
 # step 5. generate new random gene sets
 # this is vital, double check!
+random_geneset_oneset = function(ngene, mat, mean.const, sigma.const, max.const){
+    n1 = nrow(mat)
+    genes = colnames(mat)
+    # step 1. randomly pick two  suitable farthest apart genes 
+    ind.max.iter = T
+    while(ind.max.iter){
+    farest_dist = 0; ngene_cand = 0
+    while( (abs(farest_dist - max.const) >= 0.1*max.const) | (ngene_cand < ngene)){
+        g1.index = sample(1:n1, 1)
+        g1 = genes[g1.index]
+        g1.dist = mat[g1.index, ]
+        g2.index = which.min(abs(g1.dist - max.const))
+        g2 = genes[g2.index]
+        farest_dist = mat[g1.index, g2.index]
+        ngene_cand = abs(g1.index - g2.index)
+    }
+    if(g1.index > g2.index){
+        tmp = g1.index
+        g1.index = g2.index
+        g2.index = tmp
+    }
+    # step 2; pick the rest ngene -2 genes
+    # try brutial force 
+    k = 1; k.max = choose(ngene_cand, ngene)
+    mean_initial = 0; sigma_initial=0
+    g.index = c()
+    while( (k<k.max) & (abs(mean.const - mean_initial)/mean.const >=0.2 | abs(sigma.const - sigma_initial)/sigma.const>=0.2)){
+        k = k + 1
+        gr.index = sample(g1.index:g2.index, ngene-2, replace = F)
+        g.index = c(g1.index, g2.index, gr.index)
+        mat_tmp = mat[g.index, g.index]
+        mean_initial = mean(mat_tmp)
+        sigma_initial = sd(mat_tmp)
+    }
+        if(k==k.max){
+            ind.max.iter = T
+        } else {
+            ind.max.iter = F
+        }
+    }
+    geneset = genes[g.index]
+    return(geneset)
+}
+
 random_geneset = function(genes, chr, dist.mat, N){
     n = length(genes)
     ind = rownames(dist.mat) %in% genes 
     dist.mat.real = dist.mat[ind, ind]
+    dist.mat.cad = dist.mat[!ind, !ind]
     
     # mean, sd, max are used as constraint
     dist.mean = mean(dist.mat.real)
     dist.sd = sd(dist.mat.real)
     dist.max = max(dist.mat.real)
+    ### potentially parallel implementation
+    tmp = random_geneset_oneset(ngene=n, mat=dist.mat.cad, mean.const = dist.mean, sigma.const = dist.sd, max.const=dist.max)
     # check this post
     #https://stats.stackexchange.com/questions/30303/how-to-simulate-data-that-satisfy-specific-constraints-such-as-having-specific-m
     
 }
+permu_res = random_geneset(genes=gs_tf[[1]][[1]], chr=gs_chr[[1]][[1]], 
+                           dist.mat=gene_dist[[ gs_chr[[1]][[1]] ]], N=N)
 
 # step1. find the him gnes 
 ######## method overhaul again 

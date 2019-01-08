@@ -4,6 +4,7 @@ cells = c('gm12878', 'k562')
 ws = c('5000', '10000', '50000', '100000')
 type = c('individual', 'population')
 chip_coverage_cutoffs=c(0.05, 0.1, 0.2)
+N=1000 # the number of random gene set per him
 cell='gm12878'; w='10000'
 peak_gene = load_peak_table(cell=cell, w=w)
 tfs = colnames(peak_gene)
@@ -12,7 +13,10 @@ gene_dist = compute_pairwise_distance(genes_bed)
 gs_tf_chr = extract_him_genes_per_TF(i='data/him_summary_allinone.txt', cell=cell, tfs=tfs)
 gs_tf = gs_tf_chr[['genes']]; gs_chr = gs_tf_chr[['chr']]
 source('src/chip_seq_enrichment_test.R')
-gene_dist[['chr1']][1:5, 1:5]
+# test one one him
+str(gs_tf)
+permu_res = random_geneset(genes=gs_tf[[1]][[1]], chr=gs_chr[[1]][[1]], 
+                           dist.mat=gene_dist[[ gs_chr[[1]][[1]] ]], N=N)
 #### method overhaul
 result = c()
 for(cell in cells){
