@@ -4,6 +4,16 @@ cells = c('gm12878', 'k562')
 ws = c('5000', '10000', '50000', '100000')
 type = c('individual', 'population')
 chip_coverage_cutoffs=c(0.05, 0.1, 0.2)
+cell='gm12878'; w='10000'
+peak_gene = load_peak_table(cell=cell, w=w)
+tfs = colnames(peak_gene)
+genes_bed = load_gene_grn_bed(cell=cell)
+gene_dist = compute_pairwise_distance(genes_bed)
+gs_tf_chr = extract_him_genes_per_TF(i='data/him_summary_allinone.txt', cell=cell, tfs=tfs)
+gs_tf = gs_tf_chr[['genes']]; gs_chr = gs_tf_chr[['chr']]
+source('src/chip_seq_enrichment_test.R')
+gene_dist[['chr1']][1:5, 1:5]
+#### method overhaul
 result = c()
 for(cell in cells){
     hims_gs = gs_from_hims('data/him_summary_allinone.txt', cell=cell)
@@ -22,11 +32,19 @@ result$cc = factor(result$cc, levels=chip_coverage_cutoffs)
 result_pop = subset(result, ty=='population')
 result_pop_long = melt(result_pop, measure.vars = c('prop', 'pval.1', 'background'))
 ggplot(result_pop_long, aes(y=Prop.background, x=as.factor(value), color=variable)) + geom_violin() +
-    facet_grid(cell~w)
-result_pop_sum = aggregate(cbind(prop, pval.1, background)~cell+ w , data=result_pop,
+    facet_grid(cell+cc~w)
+result_pop_sum = aggregate(cbind(prop, pval.1, background)~cell+ w + cc , data=result_pop,
                         FUN=function(z) sum(z) / length(z))
 result_pop_sum = result_pop_sum[order(result_pop_sum$cell, result_pop_sum$w),]
 result_pop_sum
+# figure for paper
+ggplot(subset(result_pop, cc==0.1), aes(x=Prop, y= -1*log10(pval), color=pval<=0.05)) + geom_point(size=0.5) + 
+    geom_vline(xintercept = 0.8, linetype='dotted') +  facet_grid(cell~w) 
+# ignore pvalue 
+library(ggrepel)
+ggplot(subset(result_pop, cc==0.1), aes(x=1, y=Prop, label=tf)) + geom_point(size=0.5) + 
+    geom_text_repel() + facet_grid(cell~w) 
+
 # aggregate TFs in invidual type, x-axis is prop.background
 result_indi = aggregate(cbind(prop, pval.1, background) ~ cell+ w + tf + Prop.background, data=result,
                         FUN=function(z) sum(z) / length(z),

@@ -1,6 +1,80 @@
 library(splitstackshape)
 library(ggplot2)
 library(reshape2)
+
+# fix the peaks and gene set; randomly pick new gene set while preserving the mean distance and sd 
+# step 1. load the peak count near the tss table 
+load_peak_table = function(cell, w){
+    path = paste('data/chip-peaks/gene_TF_peak_combined_',cell,'_w_', w, '.txt', sep='')
+    peak = read.table(path, header = T, row.names = 1, sep='\t')
+    return(peak)
+}
+# step 2. load the genomic locations of genes in the GRN of a cell type
+load_gene_grn_bed = function(cell){
+    cell = 'gm12878'
+    genes = read.table(paste('data/gene_symbol_list_', cell,'.txt', sep=''), stringsAsFactors = F)
+    genes_bed = read.table('data/gene_chrom_bin_num_hg19_combined_sorted.bed', header=F, sep='\t', stringsAsFactors = F)
+    genes_bed = genes_bed[genes_bed[, 4] %in% genes[, 1], ]
+    return(genes_bed)
+}
+# step 3. compute the pairwise distance between genes per chromosome 
+compute_pairwise_distance = function(df){
+    # df is bed file 
+    chroms = unique(df[, 1])
+    chroms = chroms[chroms!= 'chrY']
+    result = list()
+    for(chr in chroms){
+       df.chr = df[df[, 1] == chr, ] 
+       tss = df.chr[, 2]
+       names(tss) = df.chr[, 4]
+       mat.dist = dist(tss, method='manhattan', upper=T)
+       mat.dist = as.matrix(mat.dist)
+       result[[chr]] = mat.dist
+    }
+    return(result)
+}
+# step 4. find the him genes per TFs
+# step 4. find the chromosome of each him
+extract_him_genes_per_TF = function(i, cell, tfs){
+    hims = read.table(i, header=T, sep='\t', stringsAsFactors = F)
+    hims = hims[hims$source == 'him', ]
+    hims = hims[grepl(cell, rownames(hims)), ]
+    hims = hims[, c('TFs', 'genes', 'chrom')]
+    hims = data.frame(him_id = rownames(hims), hims, stringsAsFactors = F)
+    result = list()
+    result_chr = list()
+    for(tf in tfs){
+        ind = grepl(tf, hims$TFs)
+        hims.sub = hims[ind, ]
+        res2 = lapply(hims.sub[, 'genes'], function(z) unlist(strsplit(z, split = ';|,')))
+        names(res2) = hims.sub[, 'him_id']
+        result[[tf]] = res2
+        
+        tmp_chr = hims.sub[, 'chrom']
+        names(tmp_chr) = hims.sub[, 'him_id']
+        result_chr[[tf]] = tmp_chr
+    }
+    result_comb = list(genes=result, chr=result_chr)
+    return(result_comb)
+}
+# step 5. generate new random gene sets
+# this is vital, double check!
+random_geneset = function(genes, chr, dist.mat, N){
+    n = length(genes)
+    ind = rownames(dist.mat) %in% genes 
+    dist.mat.real = dist.mat[ind, ind]
+    
+    # mean, sd, max are used as constraint
+    dist.mean = mean(dist.mat.real)
+    dist.sd = sd(dist.mat.real)
+    dist.max = max(dist.mat.real)
+    # check this post
+    #https://stats.stackexchange.com/questions/30303/how-to-simulate-data-that-satisfy-specific-constraints-such-as-having-specific-m
+    
+}
+
+# step1. find the him gnes 
+######## method overhaul again 
 gs_from_hims = function(i, cell){
     # load genes in the GRN of the cell type
     genes = read.table(paste('data/gene_symbol_list_', cell,'.txt', sep=''), stringsAsFactors = F)
@@ -27,11 +101,11 @@ gs_from_hims = function(i, cell){
     return(result)
 }
 #### load the summarize table for peaks near TSS
-load_peak_table = function(cell, w){
-    path = paste('data/chip-peaks/gene_TF_peak_combined_',cell,'_w_', w, '.txt', sep='')
-    peak = read.table(path, header = T, row.names = 1, sep='\t')
-    return(peak)
-}
+#load_peak_table = function(cell, w){
+#    path = paste('data/chip-peaks/gene_TF_peak_combined_',cell,'_w_', w, '.txt', sep='')
+#    peak = read.table(path, header = T, row.names = 1, sep='\t')
+#    return(peak)
+#}
 #### compute enrichment per him per TF, using fisher exact test 
 ## output; ngene, ngene w peak, prop,  porp of peaks / gene, pvalue
 chipenrich_him = function(df1, df2, method.test='individual'){
