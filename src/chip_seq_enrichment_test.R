@@ -167,6 +167,11 @@ random_geneset_pval = function(i, j, gs_tf, gs_chr, peak_gene, gene_dist, N, par
     permu_res = random_geneset(genes=gs_tf[[i]][[j]],  dist.mat=gene_dist[[ gs_chr[[i]][[j]] ]], N=N, parallel=parallel)
     if(!is.null(permu_res) & length(permu_res)>0 ){
         if( nrow(permu_res) > 0.9 * N){
+            # double check that there are no to litter overlaps between rows
+            ind = duplicated(permu_res)
+            if(sum(ind)>= 0.05 * nrow(permu_res)){
+               stop('Too many duplicated random sets') 
+            }
             npeak = sum(peak_gene[ gs_tf[[i]][[j]], tfs[i] ])
             npeak_random = apply(permu_res, 1, function(z) sum(peak_gene[z, tfs[i]]) )
             pval = sum(npeak_random >= npeak) / N

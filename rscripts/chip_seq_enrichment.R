@@ -1,10 +1,11 @@
 ## doulbe check the gene set sampling  
 ## remove the whole region from the candidate region
 ## count the absolute number instead of summing the binary variable
-## are there duplicated random samples?
+## are there duplicated random samples? Checking in progress!
 rm(list=ls())
 source('src/chip_seq_enrichment_test.R')
-cells = c('gm12878', 'k562')
+#cells = c('gm12878', 'k562')
+cells = c('k562')
 # window size does not matter much
 #ws = c('5000', '10000', '50000', '100000')
 ws = c('5000', '10000')
@@ -32,7 +33,7 @@ for(cell in cells){
         #gs_tf[[1]][[46]]; gs_chr[[1]][[46]]
         for(k in 1:nrow(ncomb)){
             tmp = random_geneset_pval(i=ncomb[k, 1], j=ncomb[k, 2], gs_tf=gs_tf, gs_chr=gs_chr, 
-                                    peak_gene=peak_gene, gene_dist=gene_dist, N=N, parallel=T)  
+                                    peak_gene=peak_gene, gene_dist=gene_dist, N=N, parallel=F)  
             if(!is.null(tmp)){
               res = rbind(res, tmp)
             }
