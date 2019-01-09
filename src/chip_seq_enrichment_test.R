@@ -189,11 +189,19 @@ summarize_enrich = function(cell, w){
     ifile = paste('inter_results/chip_enrichment_', cell, '_w_', w, '.txt',sep='')
     res = read.table(ifile, header = F, sep='\t', stringsAsFactors = F)
     colnames(res) = c('tf', 'him', 'ngene', 'ngene_w_peak', 'pval', 'pval_norm', 'prop')
-    res[, 'master'] = as.integer(res[, 'tf'] %in% tf_master)
-    # summarize per TF
-    res_tab = table(res[,'pval_norm']<=0.05, res[, 'prop']>=50, res[,'master'])
-    print(res_tab)
-    print(prop.table(res_tab))
+    #### summarize per TF
+    res_pval = aggregate(pval~tf, data=res, FUN=function(z) sum(z<=0.05)/length(z))
+    res_prop = aggregate(prop~tf, data=res, FUN=function(z) sum(z>=0.5)/length(z))
+    res2 = data.frame(res_pval, prop=res_prop$prop, stringsAsFactors = F)
+    res2 = data.frame(res2, master=as.integer(res2$tf %in% tf_master), stringsAsFactors = F)
+    res2 = res2[order(res2$master, res2$prop), ]
+    print(res2)
+    #### summarize by comparing master TFs and non-master TFs
+    #res[, 'master'] = as.integer(res[, 'tf'] %in% tf_master)
+    #res_tab = table(res[,'pval_norm']<=0.05, res[, 'prop']>=50, res[,'master'])
+    #print(res_tab)
+    #print(prop.table(res_tab))
+    #####
     #res[, 'pval'] = -1*log10(res[, 'pval'])
     #res[, 'pval_norm'] = -1*log10(res[, 'pval_norm'])
     #p = ggplot(res, aes(x=prop, y=pval_norm, color=tf)) + geom_point() + geom_hline(yintercept = -1*log10(0.05))
@@ -208,6 +216,8 @@ res = summarize_enrich(cell='gm12878', w='100000')
 # pval has weak correlations with prop
 # 40% HIMs regualted by master TFs have master TFs'peaks in majority of HIMs genes 
 # which is expected higher than non-master TFs because master TFs have higher number of peaks 
+# still only small proportion of HIMs have pval <= 0.05; again it is not a good idea to test when sample size is small
+# even HIMs with 100% genes having peaks are still non-sig (p~0.3 for master TF RUNX3)
 
 ######## method overhaul again 
 # step1. find the him gnes 

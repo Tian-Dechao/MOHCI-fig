@@ -1,6 +1,7 @@
 ## doulbe check the gene set sampling  
 ## remove the whole region from the candidate region
 ## count the absolute number instead of summing the binary variable
+## are there duplicated random samples?
 rm(list=ls())
 source('src/chip_seq_enrichment_test.R')
 cells = c('gm12878', 'k562')
