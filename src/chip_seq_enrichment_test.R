@@ -153,10 +153,10 @@ random_geneset = function(genes, dist.mat, N, parallel=T){
             }
             
             if(k.empty >=50){
+               result = NULL
                break 
             }
         }
-        result = NULL
     }
     return(result)
 }
@@ -165,12 +165,16 @@ random_geneset_pval = function(i, j, gs_tf, gs_chr, peak_gene, gene_dist, N, par
     print(c(i, j))
     permu_res = random_geneset(genes=gs_tf[[i]][[j]],  dist.mat=gene_dist[[ gs_chr[[i]][[j]] ]], N=N, parallel=parallel)
     if(!is.null(permu_res) & length(permu_res)>0 ){
-        if( nrow(permu_res) > 0.9 * N){
+        permu_res = permu_res[!duplicated(permu_res), ]
+        if( nrow(permu_res) > 0.1 * N){
             # double check that there are no to litter overlaps between rows
-            ind = duplicated(permu_res)
-            if(sum(ind)>= 0.05 * nrow(permu_res)){
-               stop('Too many duplicated random sets') 
-            }
+            #ind = duplicated(permu_res)
+            #if(sum(ind)> 0.1 * nrow(permu_res)){
+            #    print(N)
+            #    print(sum(ind))
+            #   stop('Too many duplicated random sets') 
+            #}
+            
             npeak = sum(peak_gene[ gs_tf[[i]][[j]], tfs[i] ])
             npeak_random = apply(permu_res, 1, function(z) sum(peak_gene[z, tfs[i]]) )
             pval = sum(npeak_random >= npeak) / N
@@ -212,10 +216,6 @@ summarize_enrich = function(cell, w){
     #print(p)
     return(res)
 }
-res = summarize_enrich(cell='gm12878', w='5000')
-res = summarize_enrich(cell='gm12878', w='10000')
-res = summarize_enrich(cell='gm12878', w='50000')
-res = summarize_enrich(cell='gm12878', w='100000')
 ## observations 
 # pval has weak correlations with prop
 # 40% HIMs regualted by master TFs have master TFs'peaks in majority of HIMs genes 
