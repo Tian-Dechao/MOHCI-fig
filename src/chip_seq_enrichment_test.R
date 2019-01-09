@@ -181,6 +181,34 @@ random_geneset_pval = function(i, j, gs_tf, gs_chr, peak_gene, gene_dist, N, par
     return(tmp)
 }
 
+# analysis the resutled enrichment results
+library(ggplot2)
+summarize_enrich = function(cell, w){
+    ifile_master = paste('data/master_tfs_subset_grn_', cell, '.txt', sep='')
+    tf_master = read.table(ifile_master, header=F, stringsAsFactors = F)[, 1]
+    ifile = paste('inter_results/chip_enrichment_', cell, '_w_', w, '.txt',sep='')
+    res = read.table(ifile, header = F, sep='\t', stringsAsFactors = F)
+    colnames(res) = c('tf', 'him', 'ngene', 'ngene_w_peak', 'pval', 'pval_norm', 'prop')
+    res[, 'master'] = as.integer(res[, 'tf'] %in% tf_master)
+    # summarize per TF
+    res_tab = table(res[,'pval_norm']<=0.05, res[, 'prop']>=50, res[,'master'])
+    print(res_tab)
+    print(prop.table(res_tab))
+    #res[, 'pval'] = -1*log10(res[, 'pval'])
+    #res[, 'pval_norm'] = -1*log10(res[, 'pval_norm'])
+    #p = ggplot(res, aes(x=prop, y=pval_norm, color=tf)) + geom_point() + geom_hline(yintercept = -1*log10(0.05))
+    #print(p)
+    return(res)
+}
+res = summarize_enrich(cell='gm12878', w='5000')
+res = summarize_enrich(cell='gm12878', w='10000')
+res = summarize_enrich(cell='gm12878', w='50000')
+res = summarize_enrich(cell='gm12878', w='100000')
+## observations 
+# pval has weak correlations with prop
+# 40% HIMs regualted by master TFs have master TFs'peaks in majority of HIMs genes 
+# which is expected higher than non-master TFs because master TFs have higher number of peaks 
+
 ######## method overhaul again 
 # step1. find the him gnes 
 gs_from_hims = function(i, cell){

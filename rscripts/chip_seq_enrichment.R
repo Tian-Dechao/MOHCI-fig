@@ -1,8 +1,12 @@
 ## doulbe check the gene set sampling  
+## remove the whole region from the candidate region
+## count the absolute number instead of summing the binary variable
 rm(list=ls())
 source('src/chip_seq_enrichment_test.R')
 cells = c('gm12878', 'k562')
-ws = c('5000', '10000', '50000', '100000')
+# window size does not matter much
+#ws = c('5000', '10000', '50000', '100000')
+ws = c('5000', '10000')
 N=1000 # the number of random gene set per him
 for(cell in cells){
     for(w in ws){
