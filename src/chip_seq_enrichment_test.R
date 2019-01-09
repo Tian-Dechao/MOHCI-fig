@@ -14,7 +14,6 @@ load_peak_table = function(cell, w, filter=T, chip_coverage=0.1){
 }
 # step 2. load the genomic locations of genes in the GRN of a cell type
 load_gene_grn_bed = function(cell){
-    cell = 'gm12878'
     genes = read.table(paste('data/gene_symbol_list_', cell,'.txt', sep=''), stringsAsFactors = F)
     genes_bed = read.table('data/gene_chrom_bin_num_hg19_combined_sorted.bed', header=F, sep='\t', stringsAsFactors = F)
     genes_bed = genes_bed[genes_bed[, 4] %in% genes[, 1], ]

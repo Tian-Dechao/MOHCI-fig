@@ -9,7 +9,7 @@ cells = c('k562')
 # window size does not matter much
 #ws = c('5000', '10000', '50000', '100000')
 ws = c('5000', '10000')
-N=1000 # the number of random gene set per him
+N=10 # the number of random gene set per him
 for(cell in cells){
     for(w in ws){
         peak_gene = load_peak_table(cell=cell, w=w, filter=F, chip_coverage=0.05)
@@ -30,15 +30,17 @@ for(cell in cells){
             ncomb = rbind(ncomb, tmp)
         }
         res = c()
-        #gs_tf[[1]][[46]]; gs_chr[[1]][[46]]
+        #gs_tf[[1]][[46]]; gs_chr[[1]][[46]] in gm
         for(k in 1:nrow(ncomb)){
             tmp = random_geneset_pval(i=ncomb[k, 1], j=ncomb[k, 2], gs_tf=gs_tf, gs_chr=gs_chr, 
                                     peak_gene=peak_gene, gene_dist=gene_dist, N=N, parallel=F)  
+            print(tmp)
             if(!is.null(tmp)){
               res = rbind(res, tmp)
             }
         }
         res = data.frame(res, stringsAsFactors = F)
+        print(tail(res))
         for(i in 3:6){
             res[, i] = as.numeric(res[, i])
         }
