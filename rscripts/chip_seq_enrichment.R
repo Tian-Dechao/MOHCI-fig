@@ -4,6 +4,19 @@
 ## are there duplicated random samples? The answer is no.
 rm(list=ls())
 source('src/chip_seq_enrichment_test.R')
+cells = c('gm12878', 'k562')
+N=1000 # the number of random gene set per him
+##### step 1. generate random sets
+#library(doParallel); registerDoParallel(cores=2)
+#foreach(cell=cells) %dopar%  random_geneset_output(cell=cell, N=N)
+#q(save='no')
+##### step 2. load random sets and compute pval
+cell='gm12878';w='5000'
+source('src/chip_seq_enrichment_test.R')
+random_geneset_comppute_pval(cell=cell, w=w, binary=T)
+
+######## method overhual again
+source('src/chip_seq_enrichment_test.R')
 #cells = c('gm12878', 'k562')
 cells = c('k562')
 # window size does not matter much

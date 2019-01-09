@@ -90,7 +90,7 @@ random_geneset_oneset = function(ngene, mat, mean.const, sigma.const, max.const)
         # step 2; pick the rest ngene -2 genes
         # try brutial force 
         k = 1; 
-        k.max = min(100, choose(ngene_cand, ngene))
+        k.max = min(100, choose(ngene_cand, ngene-2))
         mean_initial = 0; sigma_initial=0
         g.index = c()
         while( (k<k.max) & (abs(mean.const - mean_initial)/mean.const >=0.2 | abs(sigma.const - sigma_initial)/sigma.const>=0.2)){
@@ -118,7 +118,6 @@ random_geneset_oneset = function(ngene, mat, mean.const, sigma.const, max.const)
     } else {
         geneset = NULL
     }
-    
     return(geneset)
 }
 
@@ -160,6 +159,79 @@ random_geneset = function(genes, dist.mat, N, parallel=T){
     }
     return(result)
 }
+
+random_geneset_output = function(cell, N){
+    peak_gene = load_peak_table(cell=cell, w='5000', filter=F, chip_coverage=0.05)
+    tfs = colnames(peak_gene)
+    genes_bed = load_gene_grn_bed(cell=cell)
+    gene_dist = compute_pairwise_distance(genes_bed)
+    gs_tf_chr = extract_him_genes_per_TF(i='data/him_summary_allinone.txt', cell=cell, tfs=tfs)
+    gs_tf = gs_tf_chr[['genes']]; gs_chr = gs_tf_chr[['chr']]
+    
+    ncomb = c()
+    for(i in 1:length(tfs)){
+        nh = length(gs_tf[[i]])
+        tmp = cbind(i, 1:nh)
+        ncomb = rbind(ncomb, tmp)
+    }
+    res = c()
+    for(k in 1:nrow(ncomb)){
+        i = ncomb[k, 1]; j = ncomb[k, 2]
+        tf = tfs[i]
+        him = names(gs_tf[[i]])[j]
+        n1 = length(gs_tf[[i]][[j]])
+        tmp = paste(gs_tf[[i]][[j]], collapse = ';')
+        tmp = data.frame(tf=tf, him=him, genes=tmp, status='real', n=n1, stringsAsFactors = F)
+        res = rbind(res, tmp)
+        permu_res = random_geneset(genes=gs_tf[[i]][[j]], dist.mat=gene_dist[[ gs_chr[[i]][[j]] ]], N=N, parallel=F)
+        if(!is.null(permu_res) & length(permu_res)>0 ){
+            if(is.null(dim(permu_res))){
+                permu_res = t(data.frame(permu_res, stringsAsFactors = F))
+            } else {
+                permu_res = permu_res[!duplicated(permu_res), ]
+            }
+            if( nrow(permu_res) > 0.1 * N){
+                permu_res_char = apply(permu_res, 1, function(z) paste(z, collapse = ';'))
+                tmp = data.frame(tf=tf, him=him, genes=permu_res_char, status='random', n=ncol(permu_res), stringsAsFactors = F)
+                res = rbind(res, tmp)
+            }
+        }
+    }
+    ofile = paste('inter_results/', 'random_genes_', cell, '.txt', sep='')
+    write.table(res, ofile, col.names = T, row.names = F, sep='\t', quote=F)
+    
+}
+
+pval_norm = function(df){
+    ind_rand = df[, 1] == 'random'
+    x = df[!ind_rand, 2]
+    y = df[ind_rand, 2]
+    pval = sum(y>=x) / length(y) 
+    pval2 = pnorm(x, mean(y), sd(y), lower.tail = F)
+    tmp = c(x, mean(y), pval, pval2)
+    print(tmp)
+    return(tmp)
+}
+random_geneset_comppute_pval = function(cell, w, binary=T){
+    peak_gene = load_peak_table(cell=cell, w=w, filter=F, chip_coverage=0.05)
+    if(binary){
+        peak_gene = peak_gene >= 1
+    }
+    ifile = paste('inter_results/', 'random_genes_', cell, '.txt', sep='')
+    rand_genes = read.table(ifile, header=T, sep='\t', stringsAsFactors = F) 
+    npeak = c()
+    for(i in 1:nrow(rand_genes)){
+        tf = rand_genes[i, 'tf']
+        genes = unlist(strsplit(rand_genes[i, 'genes'], split=';'))
+        npeak[i] = sum(peak_gene[genes, tf])
+    }
+    rand_genes = cbind(rand_genes, npeak=npeak)
+    # compute pval by norm distribution
+    res = by(rand_genes[, c('status', 'npeak')], list(rand_genes$tf, rand_genes$him), FUN=pval_norm)
+    print(str(res))
+    stop()
+    return(rand_genes)
+} 
 
 random_geneset_pval = function(i, j, gs_tf, gs_chr, peak_gene, gene_dist, N, parallel=T){
     print(c(i, j))
