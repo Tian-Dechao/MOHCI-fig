@@ -7,9 +7,9 @@ source('src/chip_seq_enrichment_test.R')
 cells = c('gm12878', 'k562')
 N=1000 # the number of random gene set per him
 ##### step 1. generate random sets
-#library(doParallel); registerDoParallel(cores=2)
-#foreach(cell=cells) %dopar%  random_geneset_output(cell=cell, N=N)
-#q(save='no')
+library(doParallel); registerDoParallel(cores=2)
+foreach(cell=cells) %dopar%  random_geneset_output(cell=cell, N=N)
+q(save='no')
 ##### step 2. load random sets and compute pval
 cell='gm12878';w='5000'
 source('src/chip_seq_enrichment_test.R')
