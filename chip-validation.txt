@@ -1,0 +1,4 @@
+It is important to note that the HIMs generally do not show Chip-seq peak enrichment even thought the proportion is higher than random cases.
+One main reason is that HIMs have small number of genes (average 11).
+Note that these HIMs do not show statistically significant enrichment in Chip-seq peaks because of small numbers (average 11) of genes in the HIMs (data not shown).
+Note that these HIMs do not show Chip-seq peak enrichment because of small numbers (average 11) of genes in the HIMs (data not shown).
