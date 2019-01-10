@@ -3,6 +3,22 @@ library(ggplot2)
 library(reshape2)
 library(doParallel)
 
+compute_prop_gene_w_peaks = function(l, df){
+    tfs = names(l)
+    res = c()
+    for(i in 1:length(tfs)){
+        tf = tfs[i]
+        hims = names(l[[i]])
+        for(h in hims){
+            x = df[l[[i]][[h]], tf]
+            ng = length(x)
+            prop = sum(x) / ng * 100
+            tmp = data.frame(tf=tf, him=h, ngene=ng, prop=prop, stringsAsFactors = F)
+            res = rbind(res, tmp)
+        }
+    }
+    return(res)
+}
 # fix the peaks and gene set; randomly pick new gene set while preserving the mean distance and sd 
 # step 1. load the peak count near the tss table 
 load_peak_table = function(cell, w, filter=T, chip_coverage=0.1){
@@ -209,7 +225,7 @@ pval_norm = function(df){
     pval = sum(y>=x) / length(y) 
     pval2 = pnorm(x, mean(y), sd(y), lower.tail = F)
     tmp = c(x, mean(y), pval, pval2)
-    print(tmp)
+    names(tmp) = c('nreal', 'meanrandom', 'pval', 'pval2')
     return(tmp)
 }
 random_geneset_comppute_pval = function(cell, w, binary=T){
@@ -218,7 +234,7 @@ random_geneset_comppute_pval = function(cell, w, binary=T){
         peak_gene = peak_gene >= 1
     }
     ifile = paste('inter_results/', 'random_genes_', cell, '.txt', sep='')
-    rand_genes = read.table(ifile, header=T, sep='\t', stringsAsFactors = F) 
+    rand_genes = read.table(ifile, header=T, sep='\t', stringsAsFactors = F, nrows=3000) 
     npeak = c()
     for(i in 1:nrow(rand_genes)){
         tf = rand_genes[i, 'tf']
@@ -226,11 +242,18 @@ random_geneset_comppute_pval = function(cell, w, binary=T){
         npeak[i] = sum(peak_gene[genes, tf])
     }
     rand_genes = cbind(rand_genes, npeak=npeak)
+    rand_genes[, 'index'] = paste(rand_genes[, 'tf'], rand_genes[, 'him'], sep='_')
     # compute pval by norm distribution
-    res = by(rand_genes[, c('status', 'npeak')], list(rand_genes$tf, rand_genes$him), FUN=pval_norm)
-    print(str(res))
-    stop()
-    return(rand_genes)
+    res = c()
+    ncomb = unique(rand_genes[, c('index', 'tf', 'him')])
+    for( i in 1:nrow(ncomb)){
+        tmp = pval_norm(rand_genes[rand_genes[, 'index'] == ncomb[i, 'index'], c('status', 'npeak')])
+        res = rbind(res, tmp)
+    }
+    res = data.frame(ncomb, res, stringsAsFactors = F)
+    res2 = aggregate(cbind(pval, pval2)~tf, data=res, FUN=function(z) sum(z<=0.05) / length(z))
+    RES = list(individual=res, group=res2)
+    return(RES)
 } 
 
 random_geneset_pval = function(i, j, gs_tf, gs_chr, peak_gene, gene_dist, N, parallel=T){

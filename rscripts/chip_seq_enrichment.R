@@ -3,17 +3,94 @@
 ## count the absolute number instead of summing the binary variable
 ## are there duplicated random samples? The answer is no.
 rm(list=ls())
+library(ggplot2)
 source('src/chip_seq_enrichment_test.R')
+####################################################
+####### proportion report
+####################################################
 cells = c('gm12878', 'k562')
+#ws = c('5000', '10000', '50000', '100000')
+ws = c('10000')
+# steop 0. report the number of TFs overall
+tf_l = lapply(cells, function(z) colnames(load_peak_table(cell=z, w='5000', filter=T, chip_coverage=0.15)))
+sapply(tf_l, length)
+length(unique(unlist(tf_l)))
+# step 1. compute the proportions 
+res = c()
+for(cell in cells){
+    for(w in ws){
+        peak_gene = load_peak_table(cell=cell, w=w, filter=T, chip_coverage=0.15)
+        peak_gene = peak_gene >=1
+        tfs = colnames(peak_gene)
+        gs_tf_chr = extract_him_genes_per_TF(i='data/him_summary_allinone.txt', cell=cell, tfs=tfs)
+        gs_tf = gs_tf_chr[['genes']]
+        tmp = compute_prop_gene_w_peaks(l=gs_tf, df=peak_gene)
+        tmp = data.frame(cell=cell, w=w, tmp, stringsAsFactors = F)
+        res = rbind(res, tmp)
+    }
+}
+head(res)
+res$w = factor(res$w, levels=ws)
+aggregate(prop~cell, res, FUN=function(z) sum(z>=50)/length(z))
+round(sum(res$prop >= 50) / nrow(res) * 100 , 2)
+fivenum(res$ngene)
+
+cellnew  = c('gm12878' = 'GM12878', 'k562' = "K562")
+nhim = sapply(cells, function(z) length(unique(res[res$cell == z, 'him'])))
+cellnew = paste(cellnew,'\n(# HIMs=',  nhim, ')', sep='')
+pdf('sup_fig/chip_seq_peak.pdf', width=2, height=3)
+ggplot(res, aes(x=cell, y=prop)) + geom_boxplot(width=0.2) + 
+    ylab('% of genes in a HIM have TF Chip-seq peaks') + 
+    scale_x_discrete(labels=cellnew) + 
+    theme_classic() + 
+    theme(axis.title.y = element_text(size=8), axis.text=element_text(size=7)) + 
+    theme(axis.title.x = element_blank())  
+dev.off()
+##############################
+#### stops here 
+##############################
+stop()
+table(res$cell)
+# number of unique HIMs
+# report this number in the figure
+##
+tmp1 = aggregate(prop~tf+cell, data=res, FUN=fivenum)
+tmp2 = round(apply(peak_gene, 2, function(z) sum(z)/length(z)), 3)
+tmp3 = aggregate(prop~tf, data=res, FUN=length)
+tmp = cbind(tmp1, tmp2, tmp3)
+tmp; nrow(tmp)
+fivenum(res$prop)
+stop()
+
+####################################################
+####### enrichment test
+####################################################
+cells = c('gm12878', 'k562')
+ws = c('5000', '10000', '50000', '100000')
 N=1000 # the number of random gene set per him
 ##### step 1. generate random sets
-library(doParallel); registerDoParallel(cores=2)
-foreach(cell=cells) %dopar%  random_geneset_output(cell=cell, N=N)
+#library(doParallel); registerDoParallel(cores=2)
+#foreach(cell=cells) %dopar%  random_geneset_output(cell=cell, N=N)
+#q(save='no')
+##### step 2. load random sets, compute pval, and save the output
+res1 = c()
+res2 = c()
+for(cell in cells){
+    for(w in ws){
+        for(ty in c(T, F)){
+            tmp = random_geneset_comppute_pval(cell=cell, w=w, binary=T)
+            tmp1 = tmp[['individual']]
+            tmp2 = tmp[['group']]
+            tmp1 = data.frame(cell, w, ty, tmp1, stringsAsFactors = F)
+            tmp2 = data.frame(cell, w, ty, tmp2, stringsAsFactors = F)
+            res1 = rbind(res1, tmp1)
+            res2 = rbind(res2, tmp2)
+        }
+    }
+}
+write.table(res1, 'inter_results/chip_enrichment_individual.txt', row.names = F, sep='\t', quote=F)
+write.table(res2, 'inter_results/chip_enrichment_group.txt', row.names = F, sep='\t', quote=F)
 q(save='no')
-##### step 2. load random sets and compute pval
-cell='gm12878';w='5000'
-source('src/chip_seq_enrichment_test.R')
-random_geneset_comppute_pval(cell=cell, w=w, binary=T)
 
 ######## method overhual again
 source('src/chip_seq_enrichment_test.R')
