@@ -57,9 +57,9 @@ p; range(p)
 #Note that less than half (27.12\%-48.36\%) of the genes uniquely assigned to HIMs  are cell type-specific expressed genes.
 library(ggplot2)
 prop = data.frame(cell=rename_features_v2(names(p), nl=nl), prop=p, stringsAsFactors = F)
-pdf('sup_fig/prop_cseg_in_cshg.pdf', width=3, height=3)
+pdf('sup_fig/prop_cseg_in_cshg.pdf', width=2.7, height=2.3)
 ggplot(prop, aes(x=cell, y=p)) + geom_bar(stat='identity', width=0.3, fill='blue', alpha=0.3) + 
-    xlab('') + ylab('% of cell type-specific expressed genes\nin the genes uniquely assigned to HINs in a cell type') + 
+    xlab('') + ylab('% of cell type-specific expressed genes\nin the genes uniquely assigned to\nHINs in a cell type') + 
     theme_minimal() +
     theme(axis.title.y = element_text(size=8),
           axis.title.x = element_blank(),
