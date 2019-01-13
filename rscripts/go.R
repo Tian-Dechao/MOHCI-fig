@@ -6,9 +6,23 @@ df = read.table('data/venn.txt', header=T, row.names = 1, stringsAsFactors = F, 
 cells = colnames(df)
 genes = rownames(df); genes = unlist(sapply(genes, function(z) strsplit(z, ';')))
 #### part 1. Essential genes and genes assigned to HIMs across cell types 
-####  Housekeeping genes also;
+####  Housekeeping genes also; 
+#@article{eisenberg2013human,
+#    title={Human housekeeping genes, revisited},
+#    author={Eisenberg, Eli and Levanon, Erez Y},
+#    journal={TRENDS in Genetics},
+#    volume={29},
+#    number={10},
+#    pages={569--574},
+#    year={2013},
+#    publisher={Elsevier}
+#}
 gess = read.table('data/essential_combined.txt', header=F, stringsAsFactors = F)[, 1]
 gess = gess[ gess %in% genes]
+gess_k = read.table('data/essential_genes_k562.txt', header=F, stringsAsFactors = F)[, 1]
+gess_k = gess_k[ gess_k %in% genes]
+ghk = read.table('data/HK_genes.txt', header=F, stringsAsFactors = F)[, 1]
+ghk = ghk[ghk %in% genes]
 gene_freq_in_HIM = function(X){
     # be careful with genes in the 10kb bins; gene1;gene2;gene3
     genes = rownames(X)
@@ -20,11 +34,18 @@ gene_freq_in_HIM = function(X){
 }
 himfreq = gene_freq_in_HIM(X=df)
 him_freq_ess = himfreq[himfreq$genes %in% gess, ]
+him_freq_ess_k = himfreq[himfreq$genes %in% gess_k, ]
+him_freq_hk = himfreq[himfreq$genes %in% ghk, ]
 # prepare numbers for main text
-prop.table(table(him_freq_ess$nhim))
-ggplot(data=him_freq_ess, aes(nhim)) + geom_bar(aes(y=(..count..)/sum(..count..)), width=0.2, fill='blue', alpha=0.5) + 
-    xlab('# cell types that a essential gene is in a HIM') +  
+round(prop.table(table(him_freq_ess$nhim)) * 100, 2)
+round(prop.table(table(him_freq_hk$nhim)) * 100, 2)
+30.45 + 36.77 
+res = rbind(data.frame(him_freq_ess, type='Essential genes'), data.frame(him_freq_hk, type='HK genes'))
+#ggplot(data=him_freq_ess_k, aes(nhim)) + geom_bar(aes(y=(..count..)/sum(..count..)), width=0.2, fill='blue', alpha=0.5) + 
+ggplot(data=res, aes(nhim, fill=type)) + geom_bar(position='dodge', aes(y=..prop..)) + 
+    xlab('# cell types that a gene is in a HIM') +  
     theme_classic() + 
+    theme(legend.position = c(0.15, 0.8)) + 
     scale_y_continuous(labels=percent) + 
     theme(axis.title.y=element_blank(), axis.title.x=element_text(size=8), axis.text=element_text(size=7)) 
 ##### part2  cell type spceific genes vs genes assigned to HIMs only in one cell type
