@@ -1,7 +1,33 @@
 rm(list=ls())
+library(splitstackshape)
+library(ggplot2)
 source('src/boxdot.R')
 df = read.table('data/venn.txt', header=T, row.names = 1, stringsAsFactors = F, sep='\t')
 cells = colnames(df)
+genes = rownames(df); genes = unlist(sapply(genes, function(z) strsplit(z, ';')))
+#### part 1. Essential genes and genes assigned to HIMs across cell types 
+####  Housekeeping genes also;
+gess = read.table('data/essential_combined.txt', header=F, stringsAsFactors = F)[, 1]
+gess = gess[ gess %in% genes]
+gene_freq_in_HIM = function(X){
+    # be careful with genes in the 10kb bins; gene1;gene2;gene3
+    genes = rownames(X)
+    freq = rowSums(X==1)
+    res = data.frame(genes, nhim=freq, stringsAsFactors = F)
+    res = cSplit(res, 'genes', sep=';', direction='long')
+    res = as.data.frame(res)
+    return(res)
+}
+himfreq = gene_freq_in_HIM(X=df)
+him_freq_ess = himfreq[himfreq$genes %in% gess, ]
+# prepare numbers for main text
+prop.table(table(him_freq_ess$nhim))
+ggplot(data=him_freq_ess, aes(nhim)) + geom_bar(aes(y=(..count..)/sum(..count..)), width=0.2, fill='blue', alpha=0.5) + 
+    xlab('# cell types that a essential gene is in a HIM') +  
+    theme_classic() + 
+    scale_y_continuous(labels=percent) + 
+    theme(axis.title.y=element_blank(), axis.title.x=element_text(size=8), axis.text=element_text(size=7)) 
+##### part2  cell type spceific genes vs genes assigned to HIMs only in one cell type
 ### NHEK him 107
 genes107 = c('DSC1', 'DSC3', 'DSG1')
 df[genes107, ] # DSC1 and DSG1 are hela specifically expressed genes; DSC3 is expressed only at nhek and hela
@@ -11,13 +37,13 @@ df[genes107, ] # DSC1 and DSG1 are hela specifically expressed genes; DSC3 is ex
 ## orginally, GO is done on genes uniquely assigned to HIMs in one cell type (cshg)
 ## now GO analysis is done by controling cell type-specifically expressed genes (cseg)
 # how to do it?
-cshg_c_cseg = function(X, cell){
-    # What's the logic???
-    # observations
-        # 1. cshg - cseg cannot reproduce GO terms on cshg
-    # cshg - cseg. Why
-    # definition of cseg
-}
+#cshg_c_cseg = function(X, cell){
+#    # What's the logic???
+#    # observations
+#        # 1. cshg - cseg cannot reproduce GO terms on cshg
+#    # cshg - cseg. Why
+#    # definition of cseg
+#}
 #df.sub = df[rowSums(df != 0) >= 2, ]
 #genes = rownames(df.sub)
 #genes = unlist(sapply(genes, function(z) strsplit(z, split=';')))
