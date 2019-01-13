@@ -39,15 +39,19 @@ him_freq_hk = himfreq[himfreq$genes %in% ghk, ]
 # prepare numbers for main text
 round(prop.table(table(him_freq_ess$nhim)) * 100, 2)
 round(prop.table(table(him_freq_hk$nhim)) * 100, 2)
-30.45 + 36.77 
+#30.45 + 36.77 
+31.84 +  36.22 
 res = rbind(data.frame(him_freq_ess, type='Essential genes'), data.frame(him_freq_hk, type='HK genes'))
 #ggplot(data=him_freq_ess_k, aes(nhim)) + geom_bar(aes(y=(..count..)/sum(..count..)), width=0.2, fill='blue', alpha=0.5) + 
+pdf('main_fig/assiment_hims_ess_hk_genes.pdf', height=3, width=3)
 ggplot(data=res, aes(nhim, fill=type)) + geom_bar(position='dodge', aes(y=..prop..)) + 
     xlab('# cell types that a gene is in a HIM') +  
+    scale_fill_manual(values=c('#d95f02', '#7570b3')) + 
     theme_classic() + 
-    theme(legend.position = c(0.15, 0.8)) + 
+    theme(legend.position = c(0.25, 0.85), legend.text = element_text(size=7), legend.title = element_text(size=8)) + 
     scale_y_continuous(labels=percent) + 
     theme(axis.title.y=element_blank(), axis.title.x=element_text(size=8), axis.text=element_text(size=7)) 
+dev.off()
 ##### part2  cell type spceific genes vs genes assigned to HIMs only in one cell type
 ### NHEK him 107
 genes107 = c('DSC1', 'DSC3', 'DSG1')
