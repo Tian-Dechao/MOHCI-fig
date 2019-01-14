@@ -3,11 +3,6 @@ library(splitstackshape)
 library(ggplot2)
 source('src/boxdot.R')
 source('src/cell_type_specific_genes.R')
-## extract cell type specific genes 
-ifile='data/expression/PH_gene_expression.txt'
-cells = c('gm12878', 'hela', 'huvec', 'k562', 'nhek')
-CELLs = c('GM12878', 'HeLa', 'HUVEC', 'K562', 'NHEK'); names(CELLs) = cells
-gcs = load_rna_cs(file=ifile, cs=cells)
 df = read.table('data/venn.txt', header=T, row.names = 1, stringsAsFactors = F, sep='\t')
 genes = rownames(df); genes = unlist(sapply(genes, function(z) strsplit(z, ';')))
 #### part 1. Essential genes and genes assigned to HIMs across cell types 
@@ -32,19 +27,11 @@ him_freq_ess = himfreq[himfreq$genes %in% gess, ]
 him_freq_ess_k = himfreq[himfreq$genes %in% gess_k, ]
 him_freq_hk = himfreq[himfreq$genes %in% ghk, ]
 # prepare numbers for main text
-round(prop.table(table(him_freq_ess$nhim)) * 100, 2)
-round(prop.table(table(him_freq_hk$nhim)) * 100, 2)
 #30.45 + 36.77 
 #31.84 +  36.22 
 # data frame for essential genes and housekeeping genes
 res = rbind(data.frame(him_freq_ess, type='Essential genes'), data.frame(him_freq_hk, type='HK genes'))
 # data frame for cell type specific genes 
-res_cs = c()
-for(cell in cells){
-    tmp = himfreq[himfreq$genes %in% gcs[[cell]], ]
-    tmp = data.frame(tmp, type=cell)
-    res_cs = rbind(res_cs, tmp)
-}
 compute_prop_per_category = function(df){
     cats = unique(df$type)
     res = c()
@@ -57,31 +44,33 @@ compute_prop_per_category = function(df){
     res$nhim = factor(res$nhim, levels=5:0)
     return(res)
 }
-res_cs2 = compute_prop_per_category(res_cs)
 res2 = compute_prop_per_category(res)
-res3 = rbind(res2, res_cs2)
-pdf('main_fig/assignment_hims_gene_types.pdf', height=3, width=3)
-ggplot(data=res3, aes(x=type, y=prop, fill=nhim)) + geom_bar(stat='identity') + 
+pdf('main_fig/assignment_essential_gene_2_hims.pdf', height=2.5, width=2)
+axis_label = c('Essential genes' = 'Essential\ngenes', 'HK genes' = 'HK\ngenes')
+ggplot(data=res2, aes(x=type, y=prop, fill=nhim)) + geom_bar(stat='identity') + 
     theme_classic() + 
     theme(legend.text = element_text(size=7), legend.title = element_text(size=8)) + 
-    ylab('Proportion of genes') + 
-    xlab('Cell type specific genes') +
+    #ylab('Proportion of genes') + 
+    xlab('Assigment to HIMs') +
     scale_fill_discrete(name='# cell\ntypes') + 
-    scale_x_discrete(labels=CELLs) + 
+    scale_x_discrete(labels=axis_label) + 
     scale_y_continuous(labels=percent) + 
-    theme(axis.title=element_text(size=8), axis.text=element_text(size=7), axis.text.x= element_text(angle = 45, hjust=1)) 
+    theme(axis.title.x=element_text(size=8),axis.title.y=element_blank(), axis.text=element_text(size=7)) 
 dev.off()
-#ggplot(data=him_freq_ess_k, aes(nhim)) + geom_bar(aes(y=(..count..)/sum(..count..)), width=0.2, fill='blue', alpha=0.5) + 
-pdf('main_fig/assiment_hims_ess_hk_genes.pdf', height=3, width=3)
-ggplot(data=res, aes(nhim, fill=type)) + geom_bar(position='dodge', aes(y=..prop..)) + 
-    xlab('# cell types that a gene is in a HIM') +  
-    scale_fill_manual(values=c('#d95f02', '#7570b3')) + 
-    theme_classic() + 
-    theme(legend.position = c(0.25, 0.85), legend.text = element_text(size=7), legend.title = element_text(size=8)) + 
-    scale_y_continuous(labels=percent) + 
-    theme(axis.title.y=element_blank(), axis.title.x=element_text(size=8), axis.text=element_text(size=7)) 
-dev.off()
+# prepare numbers for main text
+by(res2, list(res2$type), function(z) sum(z[z[, 'nhim'] %in% c(4, 5) , 'prop']), simplify = T )
+by(res2, list(res2$type), function(z) sum(z[z[, 'nhim'] %in% c(3, 4, 5) , 'prop']), simplify = T )
+#pdf('main_fig/assiment_hims_ess_hk_genes.pdf', height=3, width=3)
+#ggplot(data=res, aes(nhim, fill=type)) + geom_bar(position='dodge', aes(y=..prop..)) + 
+#    xlab('# cell types that a gene is in a HIM') +  
+#    scale_fill_manual(values=c('#d95f02', '#7570b3')) + 
+#    theme_classic() + 
+#    theme(legend.position = c(0.25, 0.85), legend.text = element_text(size=7), legend.title = element_text(size=8)) + 
+#    scale_y_continuous(labels=percent) + 
+#    theme(axis.title.y=element_blank(), axis.title.x=element_text(size=8), axis.text=element_text(size=7)) 
+#dev.off()
 ##### part2  cell type spceific genes vs genes assigned to HIMs only in one cell type
+
 ### NHEK him 107
 genes107 = c('DSC1', 'DSC3', 'DSG1')
 df[genes107, ] # DSC1 and DSG1 are hela specifically expressed genes; DSC3 is expressed only at nhek and hela
@@ -145,3 +134,44 @@ ggplot(prop, aes(x=cell, y=p)) + geom_bar(stat='identity', width=0.3, fill='blue
           axis.title.x = element_blank(),
           axis.text = element_text(size=7)) 
 dev.off()
+
+################ stop here 
+#### this is optional 
+## extract cell type specific genes 
+ifile='data/expression/PH_gene_expression.txt'
+cells = c('gm12878', 'hela', 'huvec', 'k562', 'nhek')
+CELLs = c('GM12878', 'HeLa', 'HUVEC', 'K562', 'NHEK'); names(CELLs) = cells
+gcs = load_rna_cs(file=ifile, cs=cells)
+csgene_freq_in_HIM = function(X, cell, g){
+    # be careful with genes in the 10kb bins; gene1;gene2;gene3
+    genes = rownames(X)
+    # not assigned to HIM
+    ind2 = X[, cell] == 2
+    # assigned to HIMs in this cell type
+    ind1  = X[, cell] == 1
+    # assigned to this cell type only 
+    freq = rowSums(X==1)
+    ind11 = ind1 & freq == 1
+    # assigned to this cell type plus others 
+    ind12 = ind1 & freq >1
+    freq_cell = rep(NA, nrow(X))
+    freq_cell[ind2] = 0
+    freq_cell[ind11] = 1
+    freq_cell[ind12] = freq[ind12]
+    
+    res = data.frame(genes, nhim=freq_cell, type=cell, stringsAsFactors = F)
+    res = cSplit(res, 'genes', sep=';', direction='long')
+    res = as.data.frame(res)
+    res = res[res$genes %in% g, ]
+    return(res)
+}
+res_cs = lapply(cells, function(z) csgene_freq_in_HIM(X=df, cell=z, g=gcs[[z]]))
+res_cs = do.call('rbind', res_cs)
+
+res_cs = c()
+for(cell in cells){
+    tmp = himfreq[himfreq$genes %in% gcs[[cell]], ]
+    tmp = data.frame(tmp, type=cell)
+    res_cs = rbind(res_cs, tmp)
+}
+res_cs2 = compute_prop_per_category(res_cs)

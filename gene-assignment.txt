@@ -1,3 +1,1 @@
-Next, we investigate the association between gene function and the frequency that a gene is assigned to a HIM across the cell types
-The majorities ($\ge$67.22\%) of the essential and housekeeping genes are assigned to HIMs in at least 4 out of the 5 cell types (Fig.~\ref{}).
-One the other hand,
+
