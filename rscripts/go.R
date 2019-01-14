@@ -2,21 +2,16 @@ rm(list=ls())
 library(splitstackshape)
 library(ggplot2)
 source('src/boxdot.R')
+source('src/cell_type_specific_genes.R')
+## extract cell type specific genes 
+ifile='data/expression/PH_gene_expression.txt'
+cells = c('gm12878', 'hela', 'huvec', 'k562', 'nhek')
+CELLs = c('GM12878', 'HeLa', 'HUVEC', 'K562', 'NHEK'); names(CELLs) = cells
+gcs = load_rna_cs(file=ifile, cs=cells)
 df = read.table('data/venn.txt', header=T, row.names = 1, stringsAsFactors = F, sep='\t')
-cells = colnames(df)
 genes = rownames(df); genes = unlist(sapply(genes, function(z) strsplit(z, ';')))
 #### part 1. Essential genes and genes assigned to HIMs across cell types 
-####  Housekeeping genes also; 
-#@article{eisenberg2013human,
-#    title={Human housekeeping genes, revisited},
-#    author={Eisenberg, Eli and Levanon, Erez Y},
-#    journal={TRENDS in Genetics},
-#    volume={29},
-#    number={10},
-#    pages={569--574},
-#    year={2013},
-#    publisher={Elsevier}
-#}
+####  Housekeeping genes from Human housekeeping genes, revisited; 
 gess = read.table('data/essential_combined.txt', header=F, stringsAsFactors = F)[, 1]
 gess = gess[ gess %in% genes]
 gess_k = read.table('data/essential_genes_k562.txt', header=F, stringsAsFactors = F)[, 1]
@@ -40,8 +35,42 @@ him_freq_hk = himfreq[himfreq$genes %in% ghk, ]
 round(prop.table(table(him_freq_ess$nhim)) * 100, 2)
 round(prop.table(table(him_freq_hk$nhim)) * 100, 2)
 #30.45 + 36.77 
-31.84 +  36.22 
+#31.84 +  36.22 
+# data frame for essential genes and housekeeping genes
 res = rbind(data.frame(him_freq_ess, type='Essential genes'), data.frame(him_freq_hk, type='HK genes'))
+# data frame for cell type specific genes 
+res_cs = c()
+for(cell in cells){
+    tmp = himfreq[himfreq$genes %in% gcs[[cell]], ]
+    tmp = data.frame(tmp, type=cell)
+    res_cs = rbind(res_cs, tmp)
+}
+compute_prop_per_category = function(df){
+    cats = unique(df$type)
+    res = c()
+    for(c in cats){
+        tmp = as.data.frame(prop.table(table(df[df$type == c, 'nhim'])))
+        tmp = data.frame(type=c, tmp)
+        res = rbind(res, tmp)
+    }
+    colnames(res) = c('type', 'nhim', 'prop')
+    res$nhim = factor(res$nhim, levels=5:0)
+    return(res)
+}
+res_cs2 = compute_prop_per_category(res_cs)
+res2 = compute_prop_per_category(res)
+res3 = rbind(res2, res_cs2)
+pdf('main_fig/assignment_hims_gene_types.pdf', height=3, width=3)
+ggplot(data=res3, aes(x=type, y=prop, fill=nhim)) + geom_bar(stat='identity') + 
+    theme_classic() + 
+    theme(legend.text = element_text(size=7), legend.title = element_text(size=8)) + 
+    ylab('Proportion of genes') + 
+    xlab('Cell type specific genes') +
+    scale_fill_discrete(name='# cell\ntypes') + 
+    scale_x_discrete(labels=CELLs) + 
+    scale_y_continuous(labels=percent) + 
+    theme(axis.title=element_text(size=8), axis.text=element_text(size=7), axis.text.x= element_text(angle = 45, hjust=1)) 
+dev.off()
 #ggplot(data=him_freq_ess_k, aes(nhim)) + geom_bar(aes(y=(..count..)/sum(..count..)), width=0.2, fill='blue', alpha=0.5) + 
 pdf('main_fig/assiment_hims_ess_hk_genes.pdf', height=3, width=3)
 ggplot(data=res, aes(nhim, fill=type)) + geom_bar(position='dodge', aes(y=..prop..)) + 
