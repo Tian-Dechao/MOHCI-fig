@@ -108,7 +108,7 @@ ggplot(Xsub, aes(x=ness, y=jiTF)) +
     annotate('text', x=1:5 + 0.5, y=ylim_ness[2] * (5:9) / 10, label=pval_ess[, 6], size=5 * 5 / 14) +
     scale_x_discrete(labels=c(0:4, expression("">=5))) +
     theme_classic() + 
-    xlab('# HK genes shared between\npairs of HIMs in two cell types') + 
+    xlab('# essential genes shared between\npairs of HIMs in two cell types') + 
     ylab(expression(JI[TF])) + 
     theme(axis.title=element_text(size=8), axis.text=element_text(size=7)) 
 dev.off()
