@@ -1,6 +1,35 @@
-Give a intro to HK genes and essential genes.
-an increased number of shared HK genes between two different HIMs is associated with increased number of shared TFs bewteen them (Fig~\ref{})
-If two HIMs from different cell types share a higher number of HK genes, they tend to have a higher JI_{TF} thus tend to share more TF regulators (Fig~\ref{}).
-Similar positive association for the essential genes.
-We found a similar positive association for the essential genes (Fig~\ref{}). 
-suggesting that HIMs with HK genes are stable in terms of  
+One sentence in the Discussion section. 
+
+HIM comparisons regarding genes and TFs across the cell types.
+\textbf{(A)} Heatmap shows the level of significance in overlapping between the genes assigned to HIMs in two different cell types. 
+GM12878 and K562 have the highest overlap.  Statistical significance is evaluated by the  hypergeometric test.
+\textbf{(B)} \cb{Boxplots show the distribution of Jaccard index on the TFs of paired HIMs with different number of shared essential genes.}
+
+    HIM comparisons in terms of genes and TFs across the cell types.
+    \textbf{(A)} Venn diagram shows the assignment of genes in HIMs across five cell type. Numbers in each facet represents the gene number in each possible logic intersection relationship across five cell types. 
+%    \textbf{(B)} The barplot shows the top GO terms or pathways enriched with the genes that are in HIMs constitutively or only in a particular cell type.
+    \textbf{(B)} A NHEK HIM with 3 genes only assigned to HIMs in NHEK. All of its genes involve in keratinization pathway.  
+    Here the top and bottom nodes are the TFs and genes in the HIM, respectively.
+    \textbf{(C)} \cb{Barplot shows the assignment of housekeeping genes and essential genes to HIMs across the five cell types.}
+    \textbf{(D)} Scatter plot shows the mean SON and Lamin B TSA-seq scores of the 30 GM12878 HIMs that are inferred as close to nuclear nucleoli in GM12878. The red vertical dotted line represents the mean SON TSA-seq score at 0.284.
+    \textbf{(E)} Jaccard index on the genes/TFs between paired HIMs from different cell types. 
+    \textbf{(F)} Fold changes of motif $\protect M$ density and Hi-C edge density of each HIM between the cell type it is identified and another cell type.
+    Here a vertical dashed line reprsents the median of a variable.
+    \textbf{(G)} \cb{Boxplots show the distribution of Jaccard index on the TFs of paired HIMs with different number of shared HK genes.}
+
+
+Housekeeping genes and essential genes are important in maintenance of basic cellular functions across multiple tissue and cell types.
+To investigate whether they form spatial clusters across cell types, we zoomed into the assignment of HK genes (\citep{}) and essential genes to HIMs.
+We found that the majorities (≥84.43%) of them are assigned to HIMs constitutively or in at least 3 out of the 5 cell types (Fig. 4), suggesting that they do form spatial clusters across cell types. 
+
+One might expect that they form spatial clusters across cell types. 
+Housekeeping (HK) genes constantly express across multiple tissues and cell types and are required for the maintenance of basic cellular functions (\citep{}).
+Essential genes that are important for proliferation and survival in 4 cancer cell lines.
+HK genes are expected to form spatial clusters in each cell type. 
+
+
+To study whether HIMs that contain housekeeping genes in different cell types share TFs, 
+We compute the association between JI$_{TF}$ and the number of shared housekeeping genes between HIMs.
+We found that if HIMs from two different cell types share a higher number of HK genes, they tend to have a higher JI$_{TF}$, thus, they share more TFs (Fig~\ref{go}).
+We found a similar pattern for the essential genes (Fig~\ref{sup_assign}B). 
+ 

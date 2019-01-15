@@ -42,7 +42,7 @@ res = -1 * log10(res)
 library(corrplot)
 cells2 = rename_features_v2(x=cells, nl=nl)
 dimnames(res) = list(cells2, cells2)
-pdf('sup_fig/gene_assigment_2_hims_agreements_2cells.pdf', width=3, height=3)
+pdf('sup_fig/gene_assigment_2_hims_agreements_2cells.pdf', width=4, height=4)
 corrplot(res, is.corr = F, order='hclust', diag=F, cl.lim=c(0, max(res)), type='upper', mar=rep(0, 4), tl.cex=0.8,
          cl.length=5, cl.ratio=0.4, cl.align.text = 'c', cl.cex=0.6, title=NULL)
 dev.off()

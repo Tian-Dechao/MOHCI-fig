@@ -83,12 +83,12 @@ ylim_hk = boxplot.stats(Xsub$jiTF)$stats[c(1, 5)]
 ylim_hk[2] = ylim_hk[2] + 0.5 * diff(ylim_hk)
 pdf('main_fig/jiTF_hk.pdf', width=2, height=3)
 ggplot(Xsub, aes(x=nhk, y=jiTF)) + 
-    geom_boxplot(outlier.shape = NA, fill=gg_color_hue(n=2)[2], color='grey') + 
+    geom_boxplot(outlier.shape = NA, fill=gg_color_hue(n=2)[2], color='darkgrey') + 
     coord_cartesian(ylim = ylim_hk) + 
     annotate('text', x=1:5 + 0.5, y=ylim_hk[2] * (6:10) / 10, label=pval[, 6], size= 4 * 5 / 14) +
     scale_x_discrete(labels=c(0:4, expression("">=5))) +
     theme_classic() + 
-    xlab('# HK genes shared between\ntwo HIMs from two cell types') + 
+    xlab('# HK genes shared between\npairs of HIMs in two cell types') + 
     ylab(expression(JI[TF])) + 
     theme(axis.title=element_text(size=8), axis.text=element_text(size=7)) 
 dev.off()
@@ -101,14 +101,14 @@ for(i in 1:(length(ness_cat)-1)){
 Xsub$ness = factor(Xsub$ness, levels=as.character(0:5), labels=c(as.character(0:4), ">=5") )
 ylim_ness = boxplot.stats(Xsub$jiTF)$stats[c(1, 5)]
 ylim_ness[2] = ylim_ness[2] + 0.5 * diff(ylim_ness)
-pdf('sup_fig/jiTF_ess.pdf', width=2, height=2.2)
+pdf('sup_fig/jiTF_ess.pdf', width=2, height=3)
 ggplot(Xsub, aes(x=ness, y=jiTF)) + 
     geom_boxplot(outlier.shape = NA, fill=gg_color_hue(n=2)[2], color='grey') + 
     coord_cartesian(ylim = ylim_ness) + 
     annotate('text', x=1:5 + 0.5, y=ylim_ness[2] * (5:9) / 10, label=pval_ess[, 6], size=5 * 5 / 14) +
     scale_x_discrete(labels=c(0:4, expression("">=5))) +
     theme_classic() + 
-    xlab('# essential genes shared between\ntwo HIMs from two cell types') + 
+    xlab('# HK genes shared between\npairs of HIMs in two cell types') + 
     ylab(expression(JI[TF])) + 
     theme(axis.title=element_text(size=8), axis.text=element_text(size=7)) 
 dev.off()
