@@ -31,7 +31,13 @@ compare_2vects = function(x1, x2, paired=F){
      } else {
          p = c(p, '')
      }
-     result = c(m1, m2, p)
+     p2 = p[1]
+     if(as.numeric(p2) <= 2.22e-16){
+         p2 = 'P<\n2.22e-16'
+     } else{
+         p2 = paste('P=\n', p2, sep='')
+     }
+     result = c(m1, m2, p, p2)
      return(result)
  }
 X = read.table('data/him_dynamic_allinone.txt', header=T, stringsAsFactors = F, sep='\t')
@@ -65,25 +71,41 @@ shared_hk = as.character(shared_hk)
 unique(shared_hk)
 Xsub = data.frame(Xsub, ness=shared_ess, nhk=shared_hk, stringsAsFactors = F)
 Xsub$nhk = factor(Xsub$nhk, levels=as.character(0:5), labels=c(as.character(0:4), ">=5") )
+# step 3. compute p values between groups
+nhk_cat = unique(Xsub$nhk)
+pval = c()
+for(i in 1:(length(nhk_cat)-1)){
+    tmp = compare_2vects(x1=Xsub[Xsub$nhk == nhk_cat[i], 'jiTF'], x2=Xsub[Xsub$nhk == nhk_cat[i+1], 'jiTF'], paired=F)
+    pval = rbind(pval, tmp)
+}
+pval
 ylim_hk = boxplot.stats(Xsub$jiTF)$stats[c(1, 5)]
 ylim_hk[2] = ylim_hk[2] + 0.5 * diff(ylim_hk)
 pdf('main_fig/jiTF_hk.pdf', width=2, height=3)
 ggplot(Xsub, aes(x=nhk, y=jiTF)) + 
     geom_boxplot(outlier.shape = NA, fill=gg_color_hue(n=2)[2], color='grey') + 
     coord_cartesian(ylim = ylim_hk) + 
+    annotate('text', x=1:5 + 0.5, y=ylim_hk[2] * (6:10) / 10, label=pval[, 6], size= 4 * 5 / 14) +
     scale_x_discrete(labels=c(0:4, expression("">=5))) +
     theme_classic() + 
     xlab('# HK genes shared between\ntwo HIMs from two cell types') + 
     ylab(expression(JI[TF])) + 
     theme(axis.title=element_text(size=8), axis.text=element_text(size=7)) 
 dev.off()
+ness_cat = unique(Xsub$ness)
+pval_ess = c()
+for(i in 1:(length(ness_cat)-1)){
+    tmp = compare_2vects(x1=Xsub[Xsub$ness == ness_cat[i], 'jiTF'], x2=Xsub[Xsub$ness == ness_cat[i+1], 'jiTF'], paired=F)
+    pval_ess = rbind(pval_ess, tmp)
+}
 Xsub$ness = factor(Xsub$ness, levels=as.character(0:5), labels=c(as.character(0:4), ">=5") )
 ylim_ness = boxplot.stats(Xsub$jiTF)$stats[c(1, 5)]
 ylim_ness[2] = ylim_ness[2] + 0.5 * diff(ylim_ness)
-pdf('sup_fig/jiTF_ess.pdf', width=2, height=3)
+pdf('sup_fig/jiTF_ess.pdf', width=2, height=2.2)
 ggplot(Xsub, aes(x=ness, y=jiTF)) + 
     geom_boxplot(outlier.shape = NA, fill=gg_color_hue(n=2)[2], color='grey') + 
     coord_cartesian(ylim = ylim_ness) + 
+    annotate('text', x=1:5 + 0.5, y=ylim_ness[2] * (5:9) / 10, label=pval_ess[, 6], size=5 * 5 / 14) +
     scale_x_discrete(labels=c(0:4, expression("">=5))) +
     theme_classic() + 
     xlab('# essential genes shared between\ntwo HIMs from two cell types') + 

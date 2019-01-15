@@ -45,16 +45,16 @@ compute_prop_per_category = function(df){
     return(res)
 }
 res2 = compute_prop_per_category(res)
-pdf('main_fig/assignment_essential_gene_2_hims.pdf', height=2.5, width=2)
+pdf('main_fig/assignment_essential_gene_2_hims.pdf', height=1.9, width=1.8)
 axis_label = c('Essential genes' = 'Essential\ngenes', 'HK genes' = 'HK\ngenes')
 ggplot(data=res2, aes(x=type, y=prop, fill=nhim)) + geom_bar(stat='identity') + 
     theme_classic() + 
     theme(legend.text = element_text(size=7), legend.title = element_text(size=8)) + 
-    #ylab('Proportion of genes') + 
     xlab('Assigment to HIMs') +
     scale_fill_discrete(name='# cell\ntypes') + 
     scale_x_discrete(labels=axis_label) + 
     scale_y_continuous(labels=percent) + 
+    theme(legend.key.size=unit(10, 'point')) + 
     theme(axis.title.x=element_text(size=8),axis.title.y=element_blank(), axis.text=element_text(size=7)) 
 dev.off()
 # prepare numbers for main text
