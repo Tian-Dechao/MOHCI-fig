@@ -3,6 +3,10 @@ library(RColorBrewer)
 library(ggplot2)
 library(reshape2)
 library(plyr)
+gg_color_hue <- function(n) {
+    hues = seq(15, 375, length = n + 1)
+    hcl(h = hues, l = 65, c = 100)[1:n]
+}
 compare_2vects = function(x1, x2, paired=F){
      x1[is.infinite(x1)] = max(x1[is.finite(x1)])
      m1 = median(x1, na.rm=T)
@@ -55,16 +59,38 @@ names(himsum_hk) = rownames(himsum)
 # step 2. compute the number of shared essential genes 
 shared_ess = mapply(function(x, y) {sum(x %in% y)}, x=himsum_ess[Xsub[, 'himid1']], y=himsum_ess[Xsub[, 'himid2']])
 shared_hk = mapply(function(x, y) {sum(x %in% y)}, x=himsum_hk[Xsub[, 'himid1']], y=himsum_hk[Xsub[, 'himid2']])
-shared_ess[shared_ess>=6] = 6
-shared_hk[shared_hk>=6] = 6
+shared_ess[shared_ess>=5] = 5
+shared_hk[shared_hk>=5] = 5
+shared_hk = as.character(shared_hk)
+unique(shared_hk)
 Xsub = data.frame(Xsub, ness=shared_ess, nhk=shared_hk, stringsAsFactors = F)
-Xsub.long = melt(Xsub, measure.vars = fji)
-ggplot(Xsub.long, aes(x=factor(ness), y=value)) + geom_boxplot() +
-    facet_wrap(.~variable)
-ggplot(Xsub.long, aes(x=factor(nhk), y=value)) + geom_boxplot(outli) +
-    facet_wrap(.~variable)
-table(Xsub.long$nhk)
-table(Xsub.long$ness)
+Xsub$nhk = factor(Xsub$nhk, levels=as.character(0:5), labels=c(as.character(0:4), ">=5") )
+ylim_hk = boxplot.stats(Xsub$jiTF)$stats[c(1, 5)]
+ylim_hk[2] = ylim_hk[2] + 0.5 * diff(ylim_hk)
+pdf('main_fig/jiTF_hk.pdf', width=2, height=3)
+ggplot(Xsub, aes(x=nhk, y=jiTF)) + 
+    geom_boxplot(outlier.shape = NA, fill=gg_color_hue(n=2)[2], color='grey') + 
+    coord_cartesian(ylim = ylim_hk) + 
+    scale_x_discrete(labels=c(0:4, expression("">=5))) +
+    theme_classic() + 
+    xlab('# HK genes shared between\ntwo HIMs from two cell types') + 
+    ylab(expression(JI[TF])) + 
+    theme(axis.title=element_text(size=8), axis.text=element_text(size=7)) 
+dev.off()
+Xsub$ness = factor(Xsub$ness, levels=as.character(0:5), labels=c(as.character(0:4), ">=5") )
+ylim_ness = boxplot.stats(Xsub$jiTF)$stats[c(1, 5)]
+ylim_ness[2] = ylim_ness[2] + 0.5 * diff(ylim_ness)
+pdf('sup_fig/jiTF_ess.pdf', width=2, height=3)
+ggplot(Xsub, aes(x=ness, y=jiTF)) + 
+    geom_boxplot(outlier.shape = NA, fill=gg_color_hue(n=2)[2], color='grey') + 
+    coord_cartesian(ylim = ylim_ness) + 
+    scale_x_discrete(labels=c(0:4, expression("">=5))) +
+    theme_classic() + 
+    xlab('# essential genes shared between\ntwo HIMs from two cell types') + 
+    ylab(expression(JI[TF])) + 
+    theme(axis.title=element_text(size=8), axis.text=element_text(size=7)) 
+dev.off()
+#
 ## nucleous  and speckle connections
 hubtype = read.table('nucleoli/sprite_hub_annotation_gm12878.txt', header=T, sep='\t', stringsAsFactors = F)
 hubtype$Group.1 = gsub('HIM', 'gm12878', hubtype$Group.1)

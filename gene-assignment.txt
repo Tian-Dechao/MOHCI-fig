@@ -1,1 +1,6 @@
-
+Give a intro to HK genes and essential genes.
+an increased number of shared HK genes between two different HIMs is associated with increased number of shared TFs bewteen them (Fig~\ref{})
+If two HIMs from different cell types share a higher number of HK genes, they tend to have a higher JI_{TF} thus tend to share more TF regulators (Fig~\ref{}).
+Similar positive association for the essential genes.
+We found a similar positive association for the essential genes (Fig~\ref{}). 
+suggesting that HIMs with HK genes are stable in terms of  
