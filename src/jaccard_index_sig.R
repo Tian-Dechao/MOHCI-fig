@@ -30,8 +30,10 @@ load_him_pairs_JI = function(){
 }
 
 compute_ji_pval = function(){
-    res = c()
-    for(i in 1:nrow(hims_ji)){
+    library(doParallel)
+    registerDoParallel(cores=6)
+    system.time({ res = foreach(i=1:nrow(hims_ji), .combine=rbind) %dopar% {
+    #for(i in 1:500){
         print(i)
         himid1 = hims_ji[i, 'himid1']
         himid2 = hims_ji[i, 'himid2']
@@ -40,14 +42,16 @@ compute_ji_pval = function(){
         xg = gb %in% himinfo[['genes']][[himid1]]
         yg = gb %in% himinfo[['genes']][[himid2]]
         ji_gene = jaccard(x=xg, y = yg)
-        ji_gene_test = unlist(jaccard.test(x=xg, y=yg, method='exact'))
+        ji_gene_test = unlist(jaccard.test(x=xg, y=yg, method='bootstrap',fix='x', verbose=F)[c('statistics', 'pvalue', 'expectation')])
         xt = TFs_bg %in% himinfo[['tfs']][[himid1]]
         yt = TFs_bg %in% himinfo[['tfs']][[himid2]]
-        #ji_tf = jaccard(x=xt, y=yt)
-        #ji_tf_test = unlist(jaccard.test(x=xt, y=yt, method='exact'))
-        #tmp = c(ji=ji_gene, ji_gene_test, ji=ji_tf, ji_tf_test)
-        #names(tmp) = paste(names(tmp), rep(c('_gene','_tf'), rep(4, 2)), sep='')
-        #res = rbind(res, tmp)
-    }
+        ji_tf = jaccard(x=xt, y=yt)
+        ji_tf_test = unlist(jaccard.test(x=xt, y=yt, method='bootstrap', fix='x', verbose=F)[c('statistics', 'pvalue', 'expectation')])
+        tmp = c(ji=ji_gene, ji_gene_test, ji=ji_tf, ji_tf_test)
+        names(tmp) = paste(names(tmp), rep(c('_gene','_tf'), rep(4, 2)), sep='')
+        return(tmp)
+       #res = rbind(res, tmp)
+    #}
+    } })
     return(res)
 }
