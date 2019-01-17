@@ -241,12 +241,20 @@ boxdot2 = function(df, fs='cell', fn='source', g1='him', g2='merged non-him', fn
     maxy = apply(df[, featn], 2, max, na.rm=T)
     maxy = maxy + 0.05 * (maxy - miny)
     pval_table = data.frame(cell=rep(cells, rep(length(featn), length(cells))), feature=rep(featn, length(cells)), pval=pval, alter=alter, maxy=maxy )
+    pval_tmp = pval_table$pval
     pval_table$pval = format(pval_table$pval, scientific=T, digits=3)
+    pval_chr1 = rep('P<2.22e-16', nrow(pval_table))
+    pval_chr2 = paste('P=', pval_table$pval, sep='')
+    pval_table$pval = ifelse(pval_tmp<2.22e-16, pval_chr1, pval_chr2)
     if(pvalalter){
-        pval_table$pval = paste('P=', pval_table$pval, '\n', pval_table$alter, sep='')
-    } else {
-        pval_table$pval = paste('P=', pval_table$pval, sep='')
+        pval_table$pval = paste(pval_table$pval, '\n', pval_table$alter, sep='')
     }
+    #if(pvalalter){
+    #    pval_table$pval = paste('P=', pval_table$pval, '\n', pval_table$alter, sep='')
+    #} else {
+    #    pval_table$pval = paste('P=', pval_table$pval, sep='')
+    #}
+    
     indna = grepl('NA', pval_table[, 'pval'])
     pval_table[indna, 'pval'] = ''
     
