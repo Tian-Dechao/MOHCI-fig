@@ -14,6 +14,15 @@ extract_gene_tf_chr_him  = function(){
     result = list(genes=hims_genes, tfs=hims_tfs, chr=hims_chr, himids = hims_ids)
     return(result)
 }
+
+extraact_himid_per_cell = function(){
+    hims = read.table('data/him_summary_allinone.txt', header=T, sep='\t', stringsAsFactors = F)
+    hims = hims[hims$source == 'him',]
+    hims_ids = rownames(hims)
+    res = data.frame(himid = hims_ids, cell=hims$cell, stringsAsFactors = F)
+    return(res)
+}
+
 background_genes = function(){
     gene_bed = read.table('data/gene_chrom_bin_num_hg19_combined_sorted.bed', header=F, sep='\t', stringsAsFactors = F)
     rownames(gene_bed) = gene_bed[, 4]
@@ -81,11 +90,11 @@ compute_ji_pval_hypergeo = function(){
         xg = gb %in% himinfo[['genes']][[himid1]]
         yg = gb %in% himinfo[['genes']][[himid2]]
         pval1 = hypergeom_vectors(v1=xg, v2=yg)
-        #ji_gene = jaccard(x=xg, y = yg)
-        #ji_gene_test = unlist(jaccard.test(x=xg, y=yg, method='bootstrap',fix='x', verbose=F)[c('statistics', 'pvalue', 'expectation')])
         xt = TFs_bg %in% himinfo[['tfs']][[himid1]]
         yt = TFs_bg %in% himinfo[['tfs']][[himid2]]
         pval2 = hypergeom_vectors(v1=xt, v2=yt)
+        #ji_gene = jaccard(x=xg, y = yg)
+        #ji_gene_test = unlist(jaccard.test(x=xg, y=yg, method='bootstrap',fix='x', verbose=F)[c('statistics', 'pvalue', 'expectation')])
         #ji_tf = jaccard(x=xt, y=yt)
         #ji_tf_test = unlist(jaccard.test(x=xt, y=yt, method='bootstrap', fix='x', verbose=F)[c('statistics', 'pvalue', 'expectation')])
         tmp = c(pval1, pval2)
@@ -97,30 +106,15 @@ compute_ji_pval_hypergeo = function(){
     return(res)
 }
 
-hims_stable_cs = function(){
+hims_stable = function(){
     # stalbe hims are HIMs share significant number of genes with hims in at least one other cell types
     # the others are defined as cell type-specific HIMs
     ind_pval = hims_dyna$pvalue_gene <= 0.001
-    #ind_fc = hims_dyna$jiGene >= 2 * hims_dyna$expectation_gene
     ind_abs = hims_dyna$jiGene >= 1/3
     table(ind_pval, ind_abs)
-    fivenum(hims_dyna[ind_pval, 'jiGene'])
     hims_dyna_sub = hims_dyna[ind_pval & ind_abs, ]
-    hims_dyna_sub = hims_dyna[ind_abs, ]
-    hims_dyna_sub = hims_dyna[ind_pval, ]
     # stable hims 
     stable_hims = aggregate(himid1 ~ cell1, hims_dyna_sub, FUN=unique) 
-    sapply(stable_hims$himid1, length)
-    # test on TF set
-    ind_pval = hims_dyna$pvalue_tf <= 0.001
-    #ind_fc = hims_dyna$jiGene >= 2 * hims_dyna$expectation_gene
-    ind_abs = hims_dyna$jiTF >= 1/3
-    table(ind_pval, ind_abs)
-    fivenum(hims_dyna[ind_pval, 'jiTF'])
-    hims_dyna_sub = hims_dyna[ind_pval & ind_abs, ]
-    hims_dyna_sub = hims_dyna[ind_abs, ]
-    hims_dyna_sub = hims_dyna[ind_pval, ]
-    # stable hims 
-    stable_hims = aggregate(himid1 ~ cell1, hims_dyna_sub, FUN=unique) 
-    sapply(stable_hims$himid1, length)
+    res = unlist(stable_hims$himid1)
+    return(res)
 }

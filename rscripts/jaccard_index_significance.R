@@ -1,15 +1,12 @@
 rm(list=ls())
 library(jaccard)
 source('src/jaccard_index_sig.R')
-# higher than expcted (conserved); close to expected; lower than expected (cell type specific) 
-# what are the background? All the genes in the chromosome? All the genes assigned to HIMs per chrom?
-
 #df = read.table('data/venn.txt', header=T, row.names = 1, stringsAsFactors = F, sep='\t')
 #genes = rownames(df); genes = unlist(sapply(genes, function(z) strsplit(z, ';')))
 # step 0. compaute JI indices to select pairs of hims 
 # step 1. load the genes, TFs, and chromosome per HIMs
 himinfo = extract_gene_tf_chr_him()
-himids = himinfo[['himids']]; himids2 = gsub('_.*', '', himids); table(himids2)
+himids = extraact_himid_per_cell()
 # create the background genes; genes in the heterogeneous networks per chromosome 
 gene_bg_chr = background_genes()
 # create the background TFs which is universal
@@ -26,3 +23,14 @@ hims_hyper = compute_ji_pval_hypergeo()
 hims_hyper_adj = apply(hims_hyper, 2, function(z) p.adjust(z, method='bonferroni'))
 hims_dyna = cbind(hims_ji, hims_hyper_adj)
 head(hims_dyna)
+# extract conserved HIMs per cell line 
+stable_hims = hims_stable()
+# create a new variable to denote stable or cs hims
+dyna_cat = ifelse(himids$himid %in% stable_hims, 'stable', 'cs')
+himids  = data.frame(himids, conserve_staVScs=dyna_cat, stringsAsFactors = F)
+res = aggregate(conserve_staVScs~cell, himids, FUN=function(z) round(prop.table(table(z)) * 100, 2))
+res
+range(res$conserve_staVScs[, 2])
+range(res$conserve_staVScs[, 1])
+subset(himids, himid=='k562_712')
+write.table(himids, 'inter_results/him_staVScs_ji_pval.txt', col.names = T, row.names = F, sep='\t', quote=F)
