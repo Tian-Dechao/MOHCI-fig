@@ -1,0 +1,11 @@
+\st{Here we aim to discover significant heterogeneous network-level patterns by integrating chromatin interactome and GRN. }
+\st{Specifically, we want to} 
+\cb{Here we aim to} identify network structures where nodes of TFs (from GRN) and gene loci (from both chromatin interactome and GRN) cooperatively form distinct types of network clusters.   
+We developed a new algorithm MOCHI (MOtif Clustering in Heterogeneous Interactomes) that can effectively discover such network clusters, which we call heterogeneous interactome modules (HIMs), based on network motifs. 
+Each identified HIM represents a collection of gene loci and TFs that
+
+We begin by defining a property we call structural similarity. We then define a structure-connected cluster (SCC) as a collection of vertices they have strong structural similarity. Finally, we propose an algorithm that on
+
+Here, we use higher-order network structures to gain new insights into the organization of complex systems. We develop a framework that identifies clusters of network motifs. For each network motif (Fig. 1A), a different higher-order clustering may be revealed (Fig. 1B), which means that different organizational patterns are exposed, depending on the chosen motif.
+
+Definition of clusters: strongly connected.
