@@ -2,3 +2,7 @@ It is important to note that the HIMs generally do not show Chip-seq peak enrich
 One main reason is that HIMs have small number of genes (average 11).
 Note that these HIMs do not show statistically significant enrichment in Chip-seq peaks because of small numbers (average 11) of genes in the HIMs (data not shown).
 Note that these HIMs do not show Chip-seq peak enrichment because of small numbers (average 11) of genes in the HIMs (data not shown).
+The independent validation  suggesting that genes in HIMs share regulatory TFs, a key element in the HIM concept.
+
+This evidence confirms/demonstrates the genes in a HIM sharing regulatory TFs. 
+Potentially, add the TF co-localization as another evidence to support the claim.

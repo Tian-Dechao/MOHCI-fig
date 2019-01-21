@@ -1,0 +1,2 @@
+Delete HIMs close to nucleolus; Delete nucleolus to speckle changes. Because (1) only 30 such HIMs, (2) Reviewers did not mention this part.
+Delete GO on genes constitutively and uniquely assigned to HIMs across the cell types. This part provide little extra information.
