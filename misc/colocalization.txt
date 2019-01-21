@@ -1,0 +1,13 @@
+HIMs as a type of unit have a few advantages over spatially colocalized TF pairs. 
+First, the pairwise spatial colocalization does not necessarily mean simultaneously spatial colocalization between 3 or more TFs that are pairwise colocalized, 
+because different pairs could colocalize around different chromosome regions that are distal to each other in the nucleus.
+For example, a recent study investigated spatial co-localization between paired TFs from their binding sites' spatial proximity that is revealed by Hi-C data~\citep{ma2018canonical}.
+Among the 14 significantly colocalized TF pairs in A1 subcompartments in GM12878~\citep{ma2018canonical}, 10 pairs are in at least one GM12878 HIMs.
+However, among the 8 triplets of TFs that are pairwise colocalized, only 3 triplets are in HIMs. 
+Second, in comparison to colocalized TFs, HIMs provide an extra layer of information: the set of genes that are in spatial contact more frequently than expected and that are regulated by the same group of TFs. 
+Thus HIMs represent a finer scale unit to study the connection between nucleome structure and function.
+
+Recently, \citep{ma2018canonical} investigated spatial co-localization between paired TFs from their binding sites' spatial proximity that is revealed by Hi-C data.
+HIMs as a type of unit have a few advantages over spatially colocalized TF pairs. 
+First, 
+Second, HIMs provide an extra layer of information: the sets of genes that are in spatial contact more frequently than expected and that are regulated by the same group of TFs. 
