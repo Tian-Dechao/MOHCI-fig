@@ -1,7 +1,7 @@
 rm(list=ls())
-setwd('~/Documents/graph_cluster')
+#setwd('~/Documents/graph_cluster')
 load_subcompartment  = function(){
-    sub = read.table('subcompartment_inter_genes.txt', header=F, stringsAsFactors = F)
+    sub = read.table('data/subcompartment_inter_genes.txt', header=F, stringsAsFactors = F)
     sub = sub[ order(sub[, 14], -sub[, 15]), ]
     sub = sub[!duplicated(sub[, 14]), ]
     sub_vec = sub[, 4]
@@ -9,7 +9,7 @@ load_subcompartment  = function(){
     return(sub_vec)
 }
 load_hims_from_allinone = function(cell='gm12878'){
-    hims = read.table('him_summary_allinone.txt', header=T, sep='\t', stringsAsFactors = F)
+    hims = read.table('data/him_summary_allinone.txt', header=T, sep='\t', stringsAsFactors = F)
     hims = hims[hims$cell==cell & hims$source =='him', ]
     hims[, 'conserve_staVScs'] = 'stable'
     hims[hims[, 'conserve_All'] == "none", 'conserve_staVScs'] = 'cs'
@@ -61,13 +61,21 @@ compute_freq = function(x, y){
     res = data.frame(names = cats, mat, stringsAsFactors = F)
     return(res)
 }
-
+## main starts here
 sub = load_subcompartment()
 hims = load_hims_from_allinone(cell='gm12878')
 hims_gene = lapply(hims$genes, function(z) unlist(strsplit(z, ';|,')))
 hims_tf = lapply(hims$TFs, function(z) unlist(strsplit(z, ';|,')))
 hims_sub = sapply(hims_gene, function(z) subcompartment_distribution(genes=z, gene2sub=sub, dominate =F))
 hims_sub = t(hims_sub)
+rownames(hims_sub) = hims$index
+fivenum(rowSums(hims_sub))
+sum(rowSums(hims_sub) < 0.5)
+# 27 HIMs with all/majority their genes are not in any subcompartments
+hims_sub = hims_sub[ rowSums(hims_sub) > 0.5, ]
+(apply(hims_sub, 2, function(z) sum(z>=1)) / nrow(hims_sub))
+(apply(hims_sub, 2, function(z) sum(z>=0.6)) / nrow(hims_sub))
+fivenum(rowSums(hims_sub[, 1:2]))
 #hims_sub = data.frame(hims_sub, conserve_staVScs= hims$conserve_staVScs, stringsAsFactors = F)
 apply(hims_sub[hims$conserve_staVScs == 'stable', ], 2, fivenum)
 apply(hims_sub[hims$conserve_staVScs == 'cs', ], 2, fivenum)
