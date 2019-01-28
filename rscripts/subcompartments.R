@@ -47,35 +47,12 @@ subcompartment_distribution = function(genes, gene2sub, cutoff=0.5, dominate = T
     }
 }
 
-
-compute_freq = function(x, y){
-    freq1 = as.data.frame(table(x))
-    freq1[, 1] = as.character(freq1[, 1])
-    freq2 = as.data.frame(table(y))
-    freq2[, 1] = as.character(freq2[, 1])
-    cats = unique(c(freq1[, 1], freq2[, 1]))
-    mat = matrix(0, nrow=length(cats), ncol=2)
-    rownames(mat) = cats
-    mat[freq1[, 1], 1] = freq1[, 2]
-    mat[freq2[, 1], 2] = freq2[, 2]
-    res = data.frame(names = cats, mat, stringsAsFactors = F)
-    return(res)
-}
 extract_sub_freq = function(x, cutoffs, labels){
-#    Apercent = c()
-#    cells = unique(X$cell)
-#    for( ic in 1:length(cells)){
-#        x = df[df$cell == cells[ic], 'A_percent']
         y=cut(x, breaks=cutoffs, labels=labels, include.lowest = T, right=F)
         z = as.data.frame(table(y))
         z[, 2] = z[, 2] / sum(z[, 2]) * 100
-#        z = data.frame(z, cells[ic], stringsAsFactors = F)
         w = z[, 2]
         names(w) = z[, 1]
-#        Apercent = rbind(Apercent, z)
-#    }
-#    colnames(Apercent) = c('category', 'proportion')
-#    return(Apercent)
     return(w)
 }
 ## main starts here
