@@ -6,7 +6,13 @@ rm(list=ls())
 library(ggplot2)
 source('src/chip_seq_enrichment_test.R')
 ####################################################
-####### proportion report
+####### proportion report on at least two TF
+####### proportion report on single TF is not strong
+####################################################
+cells = c('gm12878', 'k562')
+ws = c('10000')
+####################################################
+####### proportion report on single TF
 ####################################################
 cells = c('gm12878', 'k562')
 #ws = c('5000', '10000', '50000', '100000')
@@ -38,9 +44,10 @@ fivenum(res$ngene)
 cellnew  = c('gm12878' = 'GM12878', 'k562' = "K562")
 nhim = sapply(cells, function(z) length(unique(res[res$cell == z, 'him'])))
 cellnew = paste(cellnew,'\n(# HIMs=',  nhim, ')', sep='')
+# results is not interesting at all.
 pdf('sup_fig/chip_seq_peak.pdf', width=2, height=3)
 ggplot(res, aes(x=cell, y=prop)) + geom_boxplot(width=0.2) + 
-    ylab('% of genes in a HIM have TF Chip-seq peaks') + 
+    ylab('% of genes in a HIM have TF ChIP-seq peaks') + 
     scale_x_discrete(labels=cellnew) + 
     theme_classic() + 
     theme(axis.title.y = element_text(size=8), axis.text=element_text(size=7)) + 
