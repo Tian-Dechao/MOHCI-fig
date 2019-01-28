@@ -78,8 +78,32 @@ cutoffs = c(0, 50, 80,   99.99999999999,101)
 labels = c('[0, 50)', '[50, 80)', '[80, 100)', '100' )
 hims_sub_freq = apply(hims_sub[, 1:2], 2, function(z) extract_sub_freq(x=z, cutoffs = cutoffs, labels = labels))
 hims_sub_freq
-sum(hims_sub_freq[2:4, ])
-sum(hims_sub_freq[3:4, ])
+colSums(hims_sub_freq[3:4, ])
+nrow(hims_sub)
+# 53.65854 16.26016 
+# A1/A2 subcompartments stop here
+# here try B1 subcompartments
+hims = load_hims_from_allinone(cell='gm12878')
+# only consider hims with all their genes in A compartments
+hims = hims[hims$A_percent <= 50,]
+hims_gene = lapply(hims$genes, function(z) unlist(strsplit(z, ';|,')))
+hims_tf = lapply(hims$TFs, function(z) unlist(strsplit(z, ';|,')))
+hims_sub = sapply(hims_gene, function(z) subcompartment_distribution(genes=z, gene2sub=sub, dominate =F))
+hims_sub = hims_sub * 100
+hims_sub = t(hims_sub)
+rownames(hims_sub) = hims$index
+fivenum(rowSums(hims_sub))
+cutoffs = c(0, 50, 80,   99.99999999999,101)
+labels = c('[0, 50)', '[50, 80)', '[80, 100)', '100' )
+hims_sub_freq = apply(hims_sub, 2, function(z) extract_sub_freq(x=z, cutoffs = cutoffs, labels = labels))
+hims_sub_freq
+#A1       A2        B1        B2        B3        B4
+#[0, 50)   89.473684 57.89474 89.473684 89.473684 92.105263 86.842105
+#[50, 80)   2.631579 28.94737  7.894737  5.263158  7.894737  0.000000
+#[80, 100)  2.631579 13.15789  0.000000  5.263158  0.000000  7.894737
+#100        5.263158  0.00000  2.631579  0.000000  0.000000  5.263158
+# B1 subcompartment stop here 
+######################################
 # prepare the table for figures 
 hims_sub_freq_long = c()
 hims_sub_freq_long[1:3] = hims_sub_freq[4:2, 1]

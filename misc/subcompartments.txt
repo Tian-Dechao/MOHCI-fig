@@ -1,0 +1,2 @@
+A compartments can be further subdivided into A1 and A2 subcompartments in GM12878 cell line~\citep{rao20143d}, which provide an opportunity to characterize the spatial location preference of HIMs at a finer scale.
+Among the 369 GM12878 HIMs with genes all in A compartments, 53.66\% of them have their genes dominantly ($\ge$80\%) in A1 subcompartments, 16.26\% in A2 subcompartments, demonstrating that the genes in a HIM tend to be in the same subcompartments.
