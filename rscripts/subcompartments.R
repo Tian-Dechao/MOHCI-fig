@@ -113,6 +113,7 @@ names3 = c(names1, 'Others', names2)
 names3 = factor(names3, levels=names3)
 hims_sub_freq_long = data.frame(cat=names3, freq=hims_sub_freq_long)
 # choose 3 colors 
+# side by side bar
 col_list = c('stable' = "#2b83ba", 'cs' = "#d7191c")
 pdf('sup_fig/Subcomp_percent_gm12878.pdf', width=3, height = 2.5/2)
 ggplot(hims_sub_freq_long, aes(x=cat, y=freq)) + geom_col(width=0.5, fill=col_list[1], alpha=0.5) + 
@@ -120,7 +121,12 @@ ggplot(hims_sub_freq_long, aes(x=cat, y=freq)) + geom_col(width=0.5, fill=col_li
     theme(axis.title = element_text(size=8), axis.text=element_text(size=6), 
           axis.text.x=element_text(angle=25, hjust=1), axis.ticks.x=element_blank())
 dev.off()
-    
+# what's the conclusions     
+A/B compartments can be furthur divided into subcompartments~(\citep{raoxx}), which provide an oppourtunity to 
+refine the spatial lcoations of HIMs.
+#Among the GM12878 HIMs with all their genes in A compartments, 
+xx % of them are dominantly either in A1 or A2 subcompartments. 
+
 # stop here
 (apply(hims_sub, 2, function(z) sum(z>=1)) / nrow(hims_sub))
 # 0.3135593 0.0819209 0.0000000 0.0000000 0.0000000 0.0000000 
