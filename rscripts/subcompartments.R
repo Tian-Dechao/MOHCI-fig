@@ -1,5 +1,4 @@
 rm(list=ls())
-#setwd('~/Documents/graph_cluster')
 load_subcompartment  = function(){
     sub = read.table('data/subcompartment_inter_genes.txt', header=F, stringsAsFactors = F)
     sub = sub[ order(sub[, 14], -sub[, 15]), ]
@@ -63,7 +62,11 @@ compute_freq = function(x, y){
 }
 ## main starts here
 sub = load_subcompartment()
+# proportion of subcompartments
+prop.table(table(sub))
 hims = load_hims_from_allinone(cell='gm12878')
+# only consider hims with all their genes in A compartments
+hims = hims[hims$A_percent == 100,]
 hims_gene = lapply(hims$genes, function(z) unlist(strsplit(z, ';|,')))
 hims_tf = lapply(hims$TFs, function(z) unlist(strsplit(z, ';|,')))
 hims_sub = sapply(hims_gene, function(z) subcompartment_distribution(genes=z, gene2sub=sub, dominate =F))
@@ -74,6 +77,15 @@ sum(rowSums(hims_sub) < 0.5)
 # 27 HIMs with all/majority their genes are not in any subcompartments
 hims_sub = hims_sub[ rowSums(hims_sub) > 0.5, ]
 (apply(hims_sub, 2, function(z) sum(z>=1)) / nrow(hims_sub))
+# 0.3135593 0.0819209 0.0000000 0.0000000 0.0000000 0.0000000 
+#0.184590690 0.064205457 0.001605136 0.000000000 0.000000000 0.003210273 
+(apply(hims_sub[, 1:2], 2, function(z) sum(z>=0.9)) / nrow(hims_sub)) 
+# 0.4322034 0.1073446 
+(apply(hims_sub[, 1:2], 2, function(z) sum(z>=0.8)) / nrow(hims_sub)) 
+# 0.5593220 0.1694915 
+# 0.5521669 0.1894061 
+(apply(hims_sub[, 1:2], 2, function(z) sum(z>=0.5)) / nrow(hims_sub)) 
+# 0.6892655 0.2909605 
 (apply(hims_sub, 2, function(z) sum(z>=0.6)) / nrow(hims_sub))
 fivenum(rowSums(hims_sub[, 1:2]))
 #hims_sub = data.frame(hims_sub, conserve_staVScs= hims$conserve_staVScs, stringsAsFactors = F)
