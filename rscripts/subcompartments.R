@@ -102,6 +102,7 @@ labels = c('[0, 50)', '[50, 80)', '[80, 100)', '100' )
 hims_sub_freq = apply(hims_sub[, 1:2], 2, function(z) extract_sub_freq(x=z, cutoffs = cutoffs, labels = labels))
 hims_sub_freq
 sum(hims_sub_freq[2:4, ])
+sum(hims_sub_freq[3:4, ])
 # prepare the table for figures 
 hims_sub_freq_long = c()
 hims_sub_freq_long[1:3] = hims_sub_freq[4:2, 1]
@@ -125,7 +126,7 @@ dev.off()
 A/B compartments can be furthur divided into subcompartments~(\citep{raoxx}), which provide an oppourtunity to 
 refine the spatial lcoations of HIMs.
 #Among the GM12878 HIMs with all their genes in A compartments, 
-xx % of them are dominantly either in A1 or A2 subcompartments. 
+69.92 % of them are dominantly (>= 80% of the genes in a HIM) either in A1 or A2 subcompartments. 
 
 # stop here
 (apply(hims_sub, 2, function(z) sum(z>=1)) / nrow(hims_sub))
