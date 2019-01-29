@@ -6,11 +6,32 @@ rm(list=ls())
 library(ggplot2)
 source('src/chip_seq_enrichment_test.R')
 ####################################################
-####### proportion report on at least two TF
+####### proportion report on HIMs with at least two TF having ChIP-seq data
 ####### proportion report on single TF is not strong
 ####################################################
 cells = c('gm12878', 'k562')
 ws = c('10000')
+res = c()
+for(cell in cells){
+    for(w in ws){
+        peak_gene = load_peak_table(cell=cell, w=w, filter=T, chip_coverage=0.15)
+        peak_gene = peak_gene >=1
+        tfs = colnames(peak_gene)
+        gs_tf_chr = extract_him_genes_per_TF(i='data/him_summary_allinone.txt', cell=cell, tfs=tfs)
+        gs_tf = gs_tf_chr[['genes']]
+        tmp = compute_prop_gene_w_peaks(l=gs_tf, df=peak_gene)
+        hims_dup = tmp[duplicated(tmp[, 'him']), 'him']
+        tmp = tmp[tmp[, 'him'] %in% hims_dup, ]
+        ## only keep HIMs with at least two TFs
+        tmp = data.frame(cell=cell, w=w, tmp, stringsAsFactors = F)
+        res = rbind(res, tmp)
+    }
+}
+res = res[order(res[, 'cell'], res[, 'him']), ]
+res$w = factor(res$w, levels=ws)
+aggregate(prop~cell, res, FUN=function(z) sum(z>=50)/length(z))
+round(sum(res$prop >= 50) / nrow(res) * 100 , 2)
+
 ####################################################
 ####### proportion report on single TF
 ####################################################
