@@ -46,7 +46,7 @@ compute_prop_per_category = function(df){
 }
 res2 = compute_prop_per_category(res)
 pdf('main_fig/assignment_essential_gene_2_hims.pdf', height=1.9, width=1.8)
-axis_label = c('Essential genes' = 'Essential\ngenes', 'HK genes' = 'HK\ngenes')
+axis_label = c('Essential genes' = 'Essential\ngenes', 'HK genes' = 'Housekeeping\ngenes')
 ggplot(data=res2, aes(x=type, y=prop, fill=nhim)) + geom_bar(stat='identity') + 
     theme_classic() + 
     theme(legend.text = element_text(size=7), legend.title = element_text(size=8)) + 

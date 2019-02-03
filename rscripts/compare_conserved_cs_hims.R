@@ -1,5 +1,5 @@
 rm(list=ls())
-library(jaccard)
+#library(jaccard)
 source('src/jaccard_index_sig.R')
 #df = read.table('data/venn.txt', header=T, row.names = 1, stringsAsFactors = F, sep='\t')
 #genes = rownames(df); genes = unlist(sapply(genes, function(z) strsplit(z, ';')))
