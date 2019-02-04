@@ -13,6 +13,7 @@ gene_bg_chr = background_genes()
 TFs_bg = unique(unlist(himinfo[['tfs']]))
 # load the hims pairs with non-zero JI on genes 
 hims_ji = load_him_pairs_JI()
+# compute the expected jiTF and jiGene between two HIMs
 # compute the Jaccard index and pvals only if two overlaps 
 #hims_ji_2 = compute_ji_pval()
 #write.table(hims_ji_2, file='inter_results/ji_pval_fix_x.txt', col.names =T, row.names=F, sep='\t', quote=F)

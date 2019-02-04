@@ -3,12 +3,16 @@ library(RColorBrewer)
 library(ggplot2)
 library(reshape2)
 library(plyr)
+
 gg_color_hue <- function(n) {
     hues = seq(15, 375, length = n + 1)
     hcl(h = hues, l = 65, c = 100)[1:n]
 }
+
 compare_2vects = function(x1, x2, paired=F){
-     x1[is.infinite(x1)] = max(x1[is.finite(x1)])
+     x1[x1 == Inf] = max(x1[is.finite(x1)])
+     x1[x1 == -Inf] = min(x1[is.finite(x1)])
+     #x1[is.infinite(x1)] = max(x1[is.finite(x1)])
      m1 = median(x1, na.rm=T)
      m2 = median(x2, na.rm=T)
      if(length(x2) > 1){
@@ -39,11 +43,70 @@ compare_2vects = function(x1, x2, paired=F){
      }
      result = c(m1, m2, p, p2)
      return(result)
- }
-X = read.table('data/him_dynamic_allinone.txt', header=T, stringsAsFactors = F, sep='\t')
-fji = c('jiTF', 'jiGene')
+}
+combine_ji_jifc = function(){
+    X = read.table('data/him_dynamic_allinone.txt', header=T, stringsAsFactors = F, sep='\t')
+    # load JI fold change as compared to random case 
+    FC = read.table('data/ji_fc.txt', header=T, stringsAsFactors = F, sep='\t')
+    ind = FC[, 'jiTF_fc'] == -Inf
+    FC[ind, 'jiTF_fc'] = min(FC[!ind, 'jiTF_fc'])
+    apply(FC[, c('jiTF_fc', 'jiGene_fc')], 2, fivenum)
+    #all(X$himid1 == FC$himid1); all(X$himid2 == FC$himid2)
+    X = cbind(X, FC[, c('jiTF_fc', 'jiGene_fc')])
+    return(X)
+}
+plot_ji_stratified = function(data, y='jiTF',x='nhk', ylim_extend=0.5, xlab, ylab){
+    #nhk_cat = unique(Xsub$nhk)
+    nhk_cat = unique(data[, x])
+    pval = c()
+    for(i in 1:(length(nhk_cat)-1)){
+        tmp = compare_2vects(x1=Xsub[Xsub[, x] == nhk_cat[i], y], x2=Xsub[Xsub[, x] == nhk_cat[i+1], y], paired=F)
+        pval = rbind(pval, tmp)
+    }
+    ylim_hk = boxplot.stats(data[is.finite(data[, y]), y])$stats[c(1, 5)]
+    ylim_hk[2] = ylim_hk[2] + ylim_extend * diff(ylim_hk)
+    p = ggplot(data, aes_string(x=x, y=y)) + 
+        geom_boxplot(outlier.shape = NA, fill=gg_color_hue(n=2)[2], color='darkgrey') + 
+        coord_cartesian(ylim = ylim_hk) + 
+        annotate('text', x=1:5 + 0.5, y=ylim_hk[2] * (6:10) / 10, label=pval[, 6], size= 4 * 5 / 14) +
+        scale_x_discrete(labels=c(0:4, expression("">=5))) +
+        theme_classic() + 
+        #xlab('# HK genes shared between\npairs of HIMs in two cell types') + 
+        #ylab(expression(JI[TF])) + 
+        xlab(xlab) + 
+        ylab(ylab) + 
+        theme(axis.title=element_text(size=8), axis.text=element_text(size=7)) 
+    return(p)
+}
+X = combine_ji_jifc()
+# load JI 
+#fji = c('jiTF', 'jiGene')
+fji = c('jiTF', 'jiGene', 'jiTF_fc', 'jiGene_fc')
+################################
+## ji fold change
+fji = c('jiGene_fc', 'jiTF_fc')
+Y = melt(X, id.vars = c('cell1', 'cell2'), measure.vars = fji, variable.name = "feature", value.name="value")
+Y[, 'cell1'] = factor(Y[, 'cell1'])
+Y[, 'cell2'] = factor(Y[, 'cell2'])
+Y.me = ddply(Y, 'feature', summarise, grp.mean=median(value))
+Y.me
+2^{Y.me[, 2]}
+head(Y)
+pdf('main_fig/jaccard_index_foldchange_hist.pdf', width=2, height=2)
+hist.plot = ggplot(Y, aes(x=value, color=feature)) + 
+    geom_histogram(aes(y=..density..), fill='white', alpha=0.2, position='identity') +
+    theme_minimal() +  theme_classic() + 
+    theme(axis.text.y = element_text(color='black', size=7), axis.title.y=element_text(size=8)) +
+    theme(axis.text.x = element_text(color='black', size=7)) +
+    theme(legend.position='bottom' ) +
+    geom_vline(data=Y.me, aes(xintercept=grp.mean, color=feature), linetype='dashed', size=1)
+print(hist.plot)
+dev.off()
+compare_2vects(x1=X[, 'jiTF_fc'], x2=X[, 'jiGene_fc'], paired=F)
+
 ####################
 ## him dynamics stratified by housekeeping genes and essential genes 
+## plot both jiTF and jiTF_fc
 ####################
 Xsub = subset(X, select=c('himid1', 'cell1', 'himid2', 'cell2', fji))
 df = read.table('data/venn.txt', header=T, row.names = 1, stringsAsFactors = F, sep='\t')
@@ -71,18 +134,26 @@ shared_hk = as.character(shared_hk)
 unique(shared_hk)
 Xsub = data.frame(Xsub, ness=shared_ess, nhk=shared_hk, stringsAsFactors = F)
 Xsub$nhk = factor(Xsub$nhk, levels=as.character(0:5), labels=c(as.character(0:4), ">=5") )
+Xsub$ness = factor(Xsub$ness, levels=as.character(0:5), labels=c(as.character(0:4), ">=5") )
 # step 3. compute p values between groups
+p =  plot_ji_stratified(data=Xsub, y='jiTF',x='nhk', ylim_extend=0.5, xlab='# HK genes shared between\npairs of HIMs in two cell types', ylab=expression(JI[TF]))
+p =  plot_ji_stratified(data=Xsub, y='jiTF',x='ness', ylim_extend=0.5, xlab='# essential genes shared between\npairs of HIMs in two cell types', ylab=expression(JI[TF]))
+p =  plot_ji_stratified(data=Xsub, y='jiTF_fc',x='nhk', ylim_extend=0.25, xlab='# HK genes shared between\npairs of HIMs in two cell types', ylab=expression(JI[TF]))
+p =  plot_ji_stratified(data=Xsub, y='jiTF_fc',x='ness', ylim_extend=0.25, xlab='# essential genes shared between\npairs of HIMs in two cell types', ylab=expression(JI[TF]))
+print(p)
 nhk_cat = unique(Xsub$nhk)
 pval = c()
 for(i in 1:(length(nhk_cat)-1)){
-    tmp = compare_2vects(x1=Xsub[Xsub$nhk == nhk_cat[i], 'jiTF'], x2=Xsub[Xsub$nhk == nhk_cat[i+1], 'jiTF'], paired=F)
+    #tmp = compare_2vects(x1=Xsub[Xsub$nhk == nhk_cat[i], 'jiTF'], x2=Xsub[Xsub$nhk == nhk_cat[i+1], 'jiTF'], paired=F)
+    tmp = compare_2vects(x1=Xsub[Xsub$nhk == nhk_cat[i], 'jiTF_fc'], x2=Xsub[Xsub$nhk == nhk_cat[i+1], 'jiTF'], paired=F)
     pval = rbind(pval, tmp)
 }
 pval
-ylim_hk = boxplot.stats(Xsub$jiTF)$stats[c(1, 5)]
+ylim_hk = boxplot.stats(Xsub[is.finite(Xsub[, 'jiTF_fc']), 'jiTF_fc'])$stats[c(1, 5)]
 ylim_hk[2] = ylim_hk[2] + 0.5 * diff(ylim_hk)
 pdf('main_fig/jiTF_hk.pdf', width=2, height=3)
-ggplot(Xsub, aes(x=nhk, y=jiTF)) + 
+#ggplot(Xsub, aes(x=nhk, y=jiTF)) + 
+ggplot(Xsub, aes(x=nhk, y=jiTF_fc)) + 
     geom_boxplot(outlier.shape = NA, fill=gg_color_hue(n=2)[2], color='darkgrey') + 
     coord_cartesian(ylim = ylim_hk) + 
     annotate('text', x=1:5 + 0.5, y=ylim_hk[2] * (6:10) / 10, label=pval[, 6], size= 4 * 5 / 14) +
@@ -169,7 +240,7 @@ library(xtable)
 print(xtable(gotab), include.rownames = F)
 
 
-# density plot
+###### density plot
 fji = c('jiGene', 'jiTF')
 Y = melt(X, id.vars = c('cell1', 'cell2'), measure.vars = fji, variable.name = "feature", value.name="value")
 Y[, 'cell1'] = factor(Y[, 'cell1'])
@@ -192,7 +263,7 @@ hist.plot = ggplot(Y, aes(x=value, color=feature)) +
 print(hist.plot)
 dev.off()
 
-    geom_vline(aes(xintercept=mean(value)), color='blue', linetype='dashed' , size=1.5) +
+#    geom_vline(aes(xintercept=mean(value)), color='blue', linetype='dashed' , size=1.5) +
 pdf('main_fig/jaccard_index.pdf', width=3, height=1)
 pcomp = ggplot(Y, aes(factor(feature), value)) + 
     geom_boxplot(outlier.shape=NA, fill='white', colour='blue') + 

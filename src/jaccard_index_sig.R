@@ -1,3 +1,4 @@
+library(jaccard)
 extract_gene_tf_chr_him  = function(){
     hims = read.table('data/him_summary_allinone.txt', header=T, sep='\t', stringsAsFactors = F)
     hims = hims[hims$source == 'him',]
@@ -64,6 +65,57 @@ load_him_pairs_JI = function(){
 #    } })
 #    return(res)
 #}
+
+compute_ji_expected = function(N, n1, n2){
+    # N is the total number of balls in a urn
+    # n1 is draw balls in set 1
+    # n2 is draw balls in set 2
+    print('test here') 
+    x = sample(50, 5, replace = F)
+    y = sample(50, 5, replace = F)
+    x; y
+    x = (1:50) %in% x
+    y = (1:50) %in% y
+    jaccard.ev(x, y)
+}
+
+compute_ji_expected_vectors = function(v1, v2){
+    mu = jaccard.ev(v1, v2)
+    names(mu) = 'jiExp'
+    return(mu)
+}
+
+compute_ji_expected_ev = function(){
+    library(doParallel)
+    registerDoParallel(cores=6)
+    system.time({ res = foreach(i=1:nrow(hims_ji), .combine=rbind) %dopar% {
+    #for(i in 1:500){
+        print(i)
+        himid1 = hims_ji[i, 'himid1']
+        himid2 = hims_ji[i, 'himid2']
+        chr = himinfo[['chr']][himid1]
+        gb = gene_bg_chr[[chr]]
+        xg = gb %in% himinfo[['genes']][[himid1]]
+        yg = gb %in% himinfo[['genes']][[himid2]]
+        mug = compute_ji_expected_vectors(v1=xg, v2=yg)
+        #pval1 = hypergeom_vectors(v1=xg, v2=yg)
+        xt = TFs_bg %in% himinfo[['tfs']][[himid1]]
+        yt = TFs_bg %in% himinfo[['tfs']][[himid2]]
+        mut = compute_ji_expected_vectors(v1=xt, v2=yt)
+        #pval2 = hypergeom_vectors(v1=xt, v2=yt)
+        #ji_gene = jaccard(x=xg, y = yg)
+        #ji_gene_test = unlist(jaccard.test(x=xg, y=yg, method='bootstrap',fix='x', verbose=F)[c('statistics', 'pvalue', 'expectation')])
+        #ji_tf = jaccard(x=xt, y=yt)
+        #ji_tf_test = unlist(jaccard.test(x=xt, y=yt, method='bootstrap', fix='x', verbose=F)[c('statistics', 'pvalue', 'expectation')])
+        tmp = c(mug, mut)
+        #tmp = c(pval1, pval2)
+        names(tmp) = paste(names(tmp), c('_gene','_tf'), sep='')
+        return(tmp)
+       #res = rbind(res, tmp)
+    #}
+    } })
+    return(res)
+}
 
 hypergeom_vectors = function(v1, v2){
     # v2 is boolean vector of white balls

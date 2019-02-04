@@ -1,0 +1,9 @@
+We found that the gene members undergo moderate change from one cell type to another, whereas the TF members change at a much higher rate.
+The median of JI$_{gene}$ and JI$_{TF}$ are 0.096 and 0.017, respectively. 
+JI$_{TF}$ is $\sim$10 times smaller than JI$_{gene}$ (Fig.~\ref{go}E)
+
+We found that the gene members undergo moderate change from one cell type to another, whereas the TF members change at a much higher rate.
+JI$_{gene}$ has a median of 0.096 and it is higher than expected JI$_{gene}$ between random gene sets that are selected while controlling the set size and chromosome number (median ratio=14.12, Fig.~\ref{go}E).
+One the other hand, JI$_{TF}$ has a median of 0.017 and it is close to expected JI$_{TF}$ between random selected control TF sets ( median ratio=0.878, Fig.~\ref{go}E).
+
+The log-transformed ratio of Jaccard index on the genes/TFs between paired HIMs from different cell types to the expected Jaccard index between random control sets. 
