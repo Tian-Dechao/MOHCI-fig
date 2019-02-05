@@ -1,0 +1,4 @@
+Recently, \citet{quinodoz2018higher} reported that chromosomal interactions across large distance are clustered \st{into} \cb{around} two distinct nuclear bodies as hubs, including nuclear speckles and nucleolus. 
+
+Borrow from papers cited this paper.
+ nuclear bodies (splicing speckles, nucleolus, etc.) act as organizational hubs and scaffolds,
