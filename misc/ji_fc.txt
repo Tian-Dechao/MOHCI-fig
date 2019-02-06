@@ -7,3 +7,7 @@ JI$_{gene}$ has a median of 0.096 and it is higher than expected JI$_{gene}$ bet
 One the other hand, JI$_{TF}$ has a median of 0.017 and it is close to expected JI$_{TF}$ between random selected control TF sets ( median ratio=0.878, Fig.~\ref{go}E).
 
 The log-transformed ratio of Jaccard index on the genes/TFs between paired HIMs from different cell types to the expected Jaccard index between random control sets. 
+
+
+### JI >= 1/3
+Note that JI$\ge$ 1/3 indicate that two equal-sized gene sets share at least half of their genes.
