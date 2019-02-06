@@ -1,0 +1,5 @@
+In addition, we focused on analyzing HIMs with the 1D distance between genes farthest apart in a HIM at most comparable to the size of compartments.
+In addition, we focused on analyzing HIMs with the 1D distance between genes farthest apart in a HIM
+at most comparable to the size of compartments.
+In addition, we use the size of compartments to control the 
+In addition, we leverage the size of compartments to control the 1D distance between genes farthest apart in a HIM.

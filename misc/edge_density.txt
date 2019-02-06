@@ -1,0 +1,2 @@
+The minimal 0 is achieved when TF$\rightarrow$gene interaction does not exist in a HIM.
+no gene is regulated by no TFs in the HIM.
