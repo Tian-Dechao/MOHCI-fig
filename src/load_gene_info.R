@@ -1,3 +1,4 @@
+## nhek_ELANE; double check this one 
 G = read.table('data/gene_info_allinone.txt', sep='\t', header=T)
 cells = unique(G$cell)
 indHIM = G$HIM == 1
