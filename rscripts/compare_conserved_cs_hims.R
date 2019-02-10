@@ -1,4 +1,5 @@
 rm(list=ls())
+source('src/boxdot.R')
 source('src/jaccard_index_sig.R')
 #df = read.table('data/venn.txt', header=T, row.names = 1, stringsAsFactors = F, sep='\t')
 #genes = rownames(df); genes = unlist(sapply(genes, function(z) strsplit(z, ';')))
@@ -149,15 +150,41 @@ G = cbind(G, tmp)
 # double check gene assignment
 table(G$HIM, G$conserve_staVScs)
 ind = G$HIM == 'No' & G$conserve_staVScs == 'cs'
-G[is.na(G$conserve_staVScs), 'conserve_staVScs'] = 'No'
+G[is.na(G$conserve_staVScs), 'conserve_staVScs'] = 'NoHIM'
+G$conserve_staVScs = factor(G$conserve_staVScs, levels=c('stable', 'cs', 'NoHIM'))
 #### visualize expression 
-col_list = c('stable' = "#2b83ba", 'cs'='red', 'No' = "#d7191c")
-feat = c('expression', 'SE_1000K')
+#col_list = c('stable' = "#2b83ba", 'cs'='red', 'No' = "#d7191c")
+source('src/color.R')
+col_list = gg_color_hue(n=3); names(col_list) = c('stable', 'cs', 'NoHIM')
+feat = c('expression')
 ncol=5; nrow=length(feat)
-pdf(file='sup_fig/sup_stable_vs_cs_vs_not_assigned.pdf', width=6.65, height=1.4 * nrow)
+pdf(file='sup_fig/sup_stable_vs_cs_vs_not_assigned_expression.pdf', width=6.65, height=2 * nrow)
 fi = 'conserve_staVScs'
 Gf = G[, c(feat, fi, 'cell')]
-ggplot(Gf, aes(x=conserve_staVScs, y=expression)) + geom_boxplot() + facet_grid(.~cell)
-ggplot(Gf, aes(x=conserve_staVScs, y=SE_1000K)) + geom_boxplot() + facet_grid(.~cell)
-#print(boxviolin2(df=Gf, fs='cell', fn=fi, g1='Yes', g2='No', ylabsize=1.1, pvalalter = F, psize=1, amaxy=1.05))
+ylim = boxplot.stats(Gf[, feat])$stats[c(1, 5)]; ylim[2] = 1.05 * ylim[2]
+ggplot(Gf, aes(x=conserve_staVScs, y=expression, fill=conserve_staVScs)) + geom_boxplot(outlier.shape = NA) + 
+    ylab('Expression') +  xlab('') + 
+    scale_y_continuous(limits = ylim) + 
+    scale_fill_manual(values=col_list, labels=rename_features(names(col_list),nl), name='Gene assignment to HIMs') + 
+    facet_grid(.~cell, labeller=as_labeller(rename_features('', nl))) + 
+    theme(legend.position = 'bottom', axis.title.x = element_blank(), axis.text.x=element_blank(), axis.ticks.x = element_blank())
 dev.off()
+
+### stop here 
+### need to redraw barplot
+feat = c('SE_1000K')
+ncol=5; nrow=length(feat)
+pdf(file='sup_fig/sup_stable_vs_cs_vs_not_assigned_SE.pdf', width=6.65, height=2 * nrow)
+fi = 'conserve_staVScs'
+Gf = G[, c(feat, fi, 'cell')]
+ylim = boxplot.stats(Gf[, feat])$stats[c(1, 5)]; ylim[2] = 1.05 * ylim[2]
+ggplot(Gf, aes(x=SE_1000K, fill=conserve_staVScs)) + 
+    geom_bar( position='dodge')  
+    #geom_boxplot(outlier.shape = NA) + 
+    ylab('# SE within 1Mb') +  xlab('') + 
+    scale_y_continuous(limits = ylim) + 
+    scale_fill_manual(values=col_list, labels=rename_features(names(col_list),nl), name='Gene assignment to HIMs') + 
+    facet_grid(.~cell, labeller=as_labeller(rename_features('', nl))) + 
+    theme(legend.position = 'bottom', axis.title.x = element_blank(), axis.text.x=element_blank(), axis.ticks.x = element_blank())
+dev.off()
+
