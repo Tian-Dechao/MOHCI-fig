@@ -61,7 +61,8 @@ nl = c('edge_density' = "Hi-C edge density",
        'LaminB_gene_mean' = 'Mean Lamin B TSA-seq',
        'SON_Sucrose' = 'SON TSA-seq',
        'LaminB' = 'Lamin B TSA-seq',
-       'repli' = 'Replication timing'
+       'repli' = 'Replication timing',
+       'NoHIM' = 'Not assigned to HIMs'
        )
 
 rename_features = function(x, nl){

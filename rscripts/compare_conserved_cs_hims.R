@@ -1,4 +1,5 @@
 rm(list=ls())
+source('src/boxdot.R')
 source('src/jaccard_index_sig.R')
 #df = read.table('data/venn.txt', header=T, row.names = 1, stringsAsFactors = F, sep='\t')
 #genes = rownames(df); genes = unlist(sapply(genes, function(z) strsplit(z, ';')))
@@ -96,3 +97,94 @@ Xf = X[, c(feat, 'cell', fi)]
 p1 = boxdot2(df=Xf, fs='cell', fn=fi, g1='stable', g2='cs', ylabsize=1.1, pvalalter = F, psize=1, amaxy=1.05)
 print(p1)
 dev.off()
+#### cell identify 
+# comment from Zhijun Duan
+# super-enhancer related 
+#feat = c('SE_num_100kb', 'SE_num_100kb_per_Mb', 'SE_density_100kb','SE_num_500kb', 'SE_num_500kb_per_Mb', 'SE_density_500kb', 'SE_num_1Mb', 'SE_num_1Mb_per_Mb','SE_density_1Mb')
+feat = c('SE_num_20kb_per_Mb', 'SE_num_50kb_per_Mb', 'SE_num_100kb_per_Mb','SE_num_500kb_per_Mb','SE_num_1Mb_per_Mb')
+nrow=length(feat); ncol=5
+pdf(file='sup_fig/sup_stable_vs_cs_se.pdf', width=1.2 * ncol, height=1.8 * nrow)
+#png(file='sup_fig/sup_stable_vs_cs_spatial.png', width=1.2 * ncol, height=1.8 * nrow, units='in', res=300)
+fi = 'conserve_staVScs'
+Xf = X[, c(feat, 'cell', fi)]
+p1 = boxdot2(df=Xf, fs='cell', fn=fi, g1='stable', g2='cs', ylabsize=1.1, pvalalter = F, psize=1, amaxy=1.05)
+print(p1)
+dev.off()
+# enseential genes 
+feat = c('ess_all_gene_p', 'ess_k562_gene_p')
+nrow=length(feat); ncol=5
+pdf(file='sup_fig/sup_stable_vs_cs_ess.pdf', width=1.2 * ncol, height=1.8 * nrow)
+fi = 'conserve_staVScs'
+Xf = X[, c(feat, 'cell', fi)]
+p1 = boxdot2(df=Xf, fs='cell', fn=fi, g1='stable', g2='cs', ylabsize=1.1, pvalalter = F, psize=1, amaxy=1.05)
+print(p1)
+dev.off()
+# master TFs 
+feat = c('master_in', 'master_in_p')
+nrow=length(feat); ncol=5
+pdf(file='sup_fig/sup_stable_vs_cs_master.pdf', width=1.2 * ncol, height=1.8 * nrow)
+fi = 'conserve_staVScs'
+Xf = X[, c(feat, 'cell', fi)]
+p1 = boxdot2(df=Xf, fs='cell', fn=fi, g1='stable', g2='cs', ylabsize=1.1, pvalalter = F, psize=1, amaxy=1.05)
+print(p1)
+dev.off()
+# gene centered comparison 
+# load gene info in G
+source('src/load_gene_info.R')
+# create gene list in conserved and cell type specific HIMs 
+source('src/him_short2long.R')
+CN = c('cell', 'conserve_staVScs', 'genes')
+hims_long = short2long(X[X$source == 'him', ], CN=CN, cn='genes')
+# merge G and hims_long 
+rownames(G) = paste(as.character(G$cell), as.character(G$gene_name), sep='_')
+rownames(hims_long) = paste(hims_long$cell, hims_long$genes, sep='_')
+####### double check
+hims_long[c('gm12878_NEDD4', 'gm12878_NEDD4L', 'www', 'gm12878_NEDD4'), ]
+# tri hims_long
+rn1 = rownames(hims_long); rn2= rownames(G); rn1 = rn1[rn1 %in% rn2]
+hims_long = hims_long[rn1, ]
+tmp = matrix(, nrow=nrow(G), ncol=ncol(hims_long)); tmp = as.data.frame(tmp); 
+dimnames(tmp) = list(rownames(G), colnames(hims_long))
+tmp[rownames(hims_long), ] = hims_long
+G = cbind(G, tmp)
+# double check gene assignment
+table(G$HIM, G$conserve_staVScs)
+ind = G$HIM == 'No' & G$conserve_staVScs == 'cs'
+G[is.na(G$conserve_staVScs), 'conserve_staVScs'] = 'NoHIM'
+G$conserve_staVScs = factor(G$conserve_staVScs, levels=c('stable', 'cs', 'NoHIM'))
+#### visualize expression 
+#col_list = c('stable' = "#2b83ba", 'cs'='red', 'No' = "#d7191c")
+source('src/color.R')
+col_list = gg_color_hue(n=3); names(col_list) = c('stable', 'cs', 'NoHIM')
+feat = c('expression')
+ncol=5; nrow=length(feat)
+pdf(file='sup_fig/sup_stable_vs_cs_vs_not_assigned_expression.pdf', width=6.65, height=2 * nrow)
+fi = 'conserve_staVScs'
+Gf = G[, c(feat, fi, 'cell')]
+ylim = boxplot.stats(Gf[, feat])$stats[c(1, 5)]; ylim[2] = 1.05 * ylim[2]
+ggplot(Gf, aes(x=conserve_staVScs, y=expression, fill=conserve_staVScs)) + geom_boxplot(outlier.shape = NA) + 
+    ylab('Expression') +  xlab('') + 
+    scale_y_continuous(limits = ylim) + 
+    scale_fill_manual(values=col_list, labels=rename_features(names(col_list),nl), name='Gene assignment to HIMs') + 
+    facet_grid(.~cell, labeller=as_labeller(rename_features('', nl))) + 
+    theme(legend.position = 'bottom', axis.title.x = element_blank(), axis.text.x=element_blank(), axis.ticks.x = element_blank())
+dev.off()
+
+### stop here 
+### need to redraw barplot
+feat = c('SE_1000K')
+ncol=5; nrow=length(feat)
+pdf(file='sup_fig/sup_stable_vs_cs_vs_not_assigned_SE.pdf', width=6.65, height=2 * nrow)
+fi = 'conserve_staVScs'
+Gf = G[, c(feat, fi, 'cell')]
+ylim = boxplot.stats(Gf[, feat])$stats[c(1, 5)]; ylim[2] = 1.05 * ylim[2]
+ggplot(Gf, aes(x=SE_1000K, fill=conserve_staVScs)) + 
+    geom_bar( position='dodge')  
+    #geom_boxplot(outlier.shape = NA) + 
+    ylab('# SE within 1Mb') +  xlab('') + 
+    scale_y_continuous(limits = ylim) + 
+    scale_fill_manual(values=col_list, labels=rename_features(names(col_list),nl), name='Gene assignment to HIMs') + 
+    facet_grid(.~cell, labeller=as_labeller(rename_features('', nl))) + 
+    theme(legend.position = 'bottom', axis.title.x = element_blank(), axis.text.x=element_blank(), axis.ticks.x = element_blank())
+dev.off()
+

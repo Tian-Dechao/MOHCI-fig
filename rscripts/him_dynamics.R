@@ -3,11 +3,7 @@ library(RColorBrewer)
 library(ggplot2)
 library(reshape2)
 library(plyr)
-
-gg_color_hue <- function(n) {
-    hues = seq(15, 375, length = n + 1)
-    hcl(h = hues, l = 65, c = 100)[1:n]
-}
+source('src/color.R')
 
 compare_2vects = function(x1, x2, paired=F){
      x1[x1 == Inf] = max(x1[is.finite(x1)])
