@@ -140,7 +140,7 @@ rownames(G) = paste(as.character(G$cell), as.character(G$gene_name), sep='_')
 rownames(hims_long) = paste(hims_long$cell, hims_long$genes, sep='_')
 ####### double check
 hims_long[c('gm12878_NEDD4', 'gm12878_NEDD4L', 'www', 'gm12878_NEDD4'), ]
-# tri hims_long
+# try hims_long
 rn1 = rownames(hims_long); rn2= rownames(G); rn1 = rn1[rn1 %in% rn2]
 hims_long = hims_long[rn1, ]
 tmp = matrix(, nrow=nrow(G), ncol=ncol(hims_long)); tmp = as.data.frame(tmp); 
@@ -163,13 +163,29 @@ fi = 'conserve_staVScs'
 Gf = G[, c(feat, fi, 'cell')]
 ylim = boxplot.stats(Gf[, feat])$stats[c(1, 5)]; ylim[2] = 1.05 * ylim[2]
 ggplot(Gf, aes(x=conserve_staVScs, y=expression, fill=conserve_staVScs)) + geom_boxplot(outlier.shape = NA) + 
+#    geom_violin() + 
     ylab('Expression') +  xlab('') + 
     scale_y_continuous(limits = ylim) + 
     scale_fill_manual(values=col_list, labels=rename_features(names(col_list),nl), name='Gene assignment to HIMs') + 
     facet_grid(.~cell, labeller=as_labeller(rename_features('', nl))) + 
     theme(legend.position = 'bottom', axis.title.x = element_blank(), axis.text.x=element_blank(), axis.ticks.x = element_blank())
 dev.off()
-
+# compute the pvals 
+cells = unique(G$cell)
+pval = c()
+for(ic in cells){
+    Gsub = G[G$cell == ic, ]
+    x = Gsub[Gsub$conserve_staVScs == 'stable', 'expression']
+    y = Gsub[Gsub$conserve_staVScs == 'cs', 'expression']
+    z = Gsub[Gsub$conserve_staVScs == 'NoHIM', 'expression']
+    res1 = compare2vect(x=x, y=z)
+    res2 = compare2vect(x=y, y=z)
+    res = rbind(res1, res2)
+    res = cbind(ic, res)
+    pval = rbind(pval, res)
+}
+pval
+max(pval[, 'pval'])
 ### stop here 
 ### need to redraw barplot
 feat = c('SE_1000K')

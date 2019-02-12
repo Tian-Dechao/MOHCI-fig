@@ -1,0 +1,3 @@
+Note that genes in both types of HIMs are significantly ({\it p}$<$2.22e-16) higher expressed than the genes in the heterogeneous networks but not assigned to HIMs.
+Note that genes assigned to both types of HIMs are significantly ({\it p}$<$2.22e-16) higher expressed than the genes in the heterogeneous networks but not assigned to HIMs.
+Note that genes assigned to both types of HIMs express significantly ({\it p}$<$2.22e-16) higher level than the genes in the heterogeneous networks but not assigned to HIMs.
